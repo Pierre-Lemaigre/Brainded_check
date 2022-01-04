@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class KripkeStructure {
-    private List<State> states;
+    private final List<State> states;
 
     KripkeStructure() {
         this.states = new ArrayList<>();
@@ -12,5 +12,11 @@ public class KripkeStructure {
 
     KripkeStructure(List<State> states) {
         this.states = states;
+    }
+
+    public void addState(State state) {
+        if (!states.contains(state)) {
+            states.add(state);
+        }
     }
 }

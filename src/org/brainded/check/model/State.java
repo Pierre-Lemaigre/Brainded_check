@@ -2,10 +2,9 @@ package org.brainded.check.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class State {
-    private final boolean initialState;
+    private boolean initialState;
     private final String stateName;
     private final List<State> successors;
     private final List<String> labels;
@@ -15,6 +14,13 @@ public class State {
        this.stateName = stateName;
        this.successors = new ArrayList<>();
        this.labels = new ArrayList<>();
+    }
+
+    State(String stateName) {
+        this.stateName = stateName;
+        this.initialState = false;
+        this.successors = new ArrayList<>();
+        this.labels = new ArrayList<>();
     }
 
     public boolean isInitialState() {
