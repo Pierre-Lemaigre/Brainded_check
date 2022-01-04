@@ -1,5 +1,7 @@
 package org.brainded.check;
 
+import org.brainded.check.parser.KripkeParser;
+
 import java.util.Scanner;
 
 public class HieroglyphsChecker {
@@ -42,9 +44,7 @@ public class HieroglyphsChecker {
         System.out.println("\n-- Load Kripke structure file -- \n");
         System.out.print("Enter the path to the Kripke structure file : ");
 
-        String kripkeFilePath = keyboard.next();
-
-        System.out.println(kripkeFilePath);
+        KripkeParser.parse(keyboard.next());
 
         act();
     }
