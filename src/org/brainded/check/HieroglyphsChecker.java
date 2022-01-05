@@ -1,6 +1,7 @@
 package org.brainded.check;
 
 import org.brainded.check.model.KripkeStructure;
+import org.brainded.check.model.exceptions.KripkeException;
 import org.brainded.check.parser.KripkeParser;
 
 import java.io.BufferedReader;
@@ -74,6 +75,12 @@ public class HieroglyphsChecker {
 
         String kripkeFilePath = readStringInput();
         ks = KripkeParser.parse(kripkeFilePath);
+        try {
+            ks.validateKripkeStruct();
+        } catch (KripkeException e) {
+            printError(e.getMessage());
+        }
+        System.out.println("Loaded this Kripke Structure :\n" + ks);
 
         act();
     }

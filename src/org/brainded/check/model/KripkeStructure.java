@@ -1,5 +1,7 @@
 package org.brainded.check.model;
 
+import org.brainded.check.model.exceptions.KripkeException;
+
 import javax.management.InstanceNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +10,7 @@ public class KripkeStructure {
     private final List<State> states;
 
     public KripkeStructure() {
-        this.states = new ArrayList<State>();
+        this.states = new ArrayList<>();
     }
 
     public KripkeStructure(List<State> states) {
@@ -50,5 +52,23 @@ public class KripkeStructure {
         }
     }
 
+    public void validateKripkeStruct() {
+        if (states.isEmpty()) {
+            throw new KripkeException("No states in the Kripke Structure.");
+        }
 
+        if (states.stream().noneMatch(State::isInitialState)) {
+            throw new KripkeException("No initial States in the Kripke Structure");
+        }
+
+        states.forEach(state -> {
+            if (state.getSuccessors().isEmpty())
+                throw new KripkeException("This state has no successor : " + state.getStateName());
+        });
+    }
+
+    @Override
+    public String toString() {
+        return states.stream().map(Object::toString).reduce((s, s2) -> s + "\n" + s2).orElse("No States");
+    }
 }
