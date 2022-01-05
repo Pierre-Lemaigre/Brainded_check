@@ -1,5 +1,8 @@
 package org.brainded.check;
 
+import org.brainded.check.model.KripkeStructure;
+import org.brainded.check.parser.KripkeParser;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -16,6 +19,8 @@ public class HieroglyphsChecker {
     }
 
     private static final BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
+
+    private static KripkeStructure ks;
 
     //endregion
 
@@ -68,7 +73,7 @@ public class HieroglyphsChecker {
         System.out.print("Enter the path to the Kripke structure file : ");
 
         String kripkeFilePath = readStringInput();
-        System.out.println(kripkeFilePath);
+        ks = KripkeParser.parse(kripkeFilePath);
 
         act();
     }
