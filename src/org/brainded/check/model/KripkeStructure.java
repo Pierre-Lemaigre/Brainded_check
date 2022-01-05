@@ -39,7 +39,7 @@ public class KripkeStructure {
     public void addSuccessors(String stateName, List<String> successors) throws InstanceNotFoundException {
         State state = this.getStateByName(stateName);
         for (String successorString : successors) {
-            state.addSuccesor(this.getStateByName(successorString));
+            state.addSuccessor(this.getStateByName(successorString));
         }
     }
 

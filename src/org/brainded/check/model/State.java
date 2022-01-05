@@ -44,7 +44,7 @@ public class State {
         this.initialState = true;
     }
 
-    public void addSuccesor(State successor) {
+    public void addSuccessor(State successor) {
         if (!successors.contains(successor)) {
             this.successors.add(successor);
         }

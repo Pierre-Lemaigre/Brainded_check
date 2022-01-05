@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class KripkeParser {
 
-    public static void parse(String kripkeFilePath) throws ClassCastException {
+    public static KripkeStructure parse(String kripkeFilePath) throws ClassCastException {
 
         KripkeStructure ks = new KripkeStructure();
 
@@ -68,5 +68,6 @@ public class KripkeParser {
         } catch (IOException | InstanceNotFoundException e) {
             e.printStackTrace();
         }
+        return ks;
     }
 }
