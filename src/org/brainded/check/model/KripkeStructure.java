@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class KripkeStructure {
+
     private final List<State> states;
 
     public KripkeStructure() {
@@ -43,12 +44,14 @@ public class KripkeStructure {
         }
     }
 
-    public void addLabeling(String stateName, List<String> labeling) throws InstanceNotFoundException {
+    public void addLabeling(String stateName, List<Character> labeling) throws InstanceNotFoundException {
         State state = this.getStateByName(stateName);
-        for (String labelingString : labeling) {
-            state.addLabel(labelingString);
+        for (char labelingChar : labeling) {
+            state.addLabel(labelingChar);
         }
     }
 
-
+    public List<State> getStates() {
+        return this.states;
+    }
 }

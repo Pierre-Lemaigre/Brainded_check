@@ -8,7 +8,7 @@ public class State {
     private boolean initialState;
     private final String stateName;
     private final List<State> successors;
-    private final List<String> labels;
+    private final List<Character> labels;
 
     public State(boolean initialState, String stateName) {
         this.initialState = initialState;
@@ -32,7 +32,7 @@ public class State {
         return successors;
     }
 
-    public List<String> getLabels() {
+    public List<Character> getLabels() {
         return labels;
     }
 
@@ -50,7 +50,7 @@ public class State {
         }
     }
 
-    public void addLabel(String label) {
+    public void addLabel(Character label) {
         this.labels.add(label);
     }
 
