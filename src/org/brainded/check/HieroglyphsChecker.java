@@ -86,11 +86,11 @@ public class HieroglyphsChecker {
         ks = KripkeParser.parse(kripkeFilePath);
         try {
             ks.validateKripkeStruct();
+            System.out.println("Loaded this Kripke Structure :\n" + ks);
         } catch (KripkeException e) {
             printError(e.getMessage());
             ks = null;
         }
-        System.out.println("Loaded this Kripke Structure :\n" + ks);
 
         act();
     }
