@@ -40,16 +40,20 @@ public class HieroglyphsChecker {
         return actionAsked;
     }
 
-    private static void loadKripke(){
+    private static void loadKripke() {
         System.out.println("\n-- Load Kripke structure file -- \n");
         System.out.print("Enter the path to the Kripke structure file : ");
 
-        KripkeParser.parse(keyboard.next());
+        try {
+            KripkeParser.parse(keyboard.next());
+        } catch (ClassCastException e) {
+            System.err.println("Invalid syntax in Kripke structure file\n");
+        }
 
         act();
     }
 
-    private static void enterCtl(){
+    private static void enterCtl() {
         System.out.println("\n-- Enter CTL state formulae -- \n");
         System.out.print("Enter the CTL state formulae to check : ");
 
@@ -60,12 +64,12 @@ public class HieroglyphsChecker {
         act();
     }
 
-    private static void quit(){
+    private static void quit() {
         System.out.println("\nBye !");
     }
 
-    private static void act(){
-        switch (displayMenu()){
+    private static void act() {
+        switch (displayMenu()) {
             case LOAD_KRIPKE -> loadKripke();
             case ENTER_CTL -> enterCtl();
             case QUIT -> quit();

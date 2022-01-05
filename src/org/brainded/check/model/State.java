@@ -2,6 +2,7 @@ package org.brainded.check.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class State {
     private boolean initialState;
@@ -9,32 +10,22 @@ public class State {
     private final List<State> successors;
     private final List<String> labels;
 
-    State(boolean initialState, String stateName) {
-       this.initialState = initialState;
-       this.stateName = stateName;
-       this.successors = new ArrayList<>();
-       this.labels = new ArrayList<>();
+    public State(boolean initialState, String stateName) {
+        this.initialState = initialState;
+        this.stateName = stateName;
+        this.successors = new ArrayList<>();
+        this.labels = new ArrayList<>();
     }
 
-    State(String stateName) {
+    public State(String stateName) {
         this.stateName = stateName;
         this.initialState = false;
         this.successors = new ArrayList<>();
         this.labels = new ArrayList<>();
     }
 
-    public boolean isInitialState() {
-        return initialState;
-    }
-
     public String getStateName() {
         return stateName;
-    }
-
-    public void addSuccesor(State successor) {
-        if (!successors.contains(successor)) {
-           addSuccesor(successor);
-        }
     }
 
     public List<State> getSuccessors() {
@@ -45,16 +36,34 @@ public class State {
         return labels;
     }
 
+    public boolean isInitialState() {
+        return initialState;
+    }
+
+    public void markAsInitialState() {
+        this.initialState = true;
+    }
+
+    public void addSuccesor(State successor) {
+        if (!successors.contains(successor)) {
+            this.successors.add(successor);
+        }
+    }
+
+    public void addLabel(String label) {
+        this.labels.add(label);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        State state = (State) o;
-        return stateName.equals(state.stateName);
+        if (o == null || this.stateName.getClass() != o.getClass()) return false;
+        String stateName = (String) o;
+        return this.stateName.equals(stateName);
     }
 
     @Override
     public int hashCode() {
-        return stateName.hashCode();
+        return Objects.hash(this.stateName);
     }
 }
