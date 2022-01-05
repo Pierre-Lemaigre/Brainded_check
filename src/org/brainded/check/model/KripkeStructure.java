@@ -5,12 +5,15 @@ import org.brainded.check.model.exceptions.KripkeException;
 import javax.management.InstanceNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class KripkeStructure {
+    private Pattern labelsAuthorized;
     private final List<State> states;
 
     public KripkeStructure() {
         this.states = new ArrayList<>();
+        labelsAuthorized = Pattern.compile("[a-z]");
     }
 
     public KripkeStructure(List<State> states) {
@@ -64,6 +67,14 @@ public class KripkeStructure {
         states.forEach(state -> {
             if (state.getSuccessors().isEmpty())
                 throw new KripkeException("This state has no successor : " + state.getStateName());
+        });
+
+        states.forEach(state -> {
+            for (String s: state.getLabels()) {
+                if (this.labelsAuthorized.matcher(s).find()) {
+                    throw new KripkeException("This state has unauthorized label : " + state.getStateName());
+                }
+            }
         });
     }
 

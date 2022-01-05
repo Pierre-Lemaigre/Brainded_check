@@ -7,6 +7,7 @@ import org.brainded.check.parser.KripkeParser;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Locale;
 
 public class HieroglyphsChecker {
 
@@ -71,14 +72,23 @@ public class HieroglyphsChecker {
     //region Actions
     private static void loadKripke() {
         System.out.println("\n-- Load Kripke structure file -- \n");
-        System.out.print("Enter the path to the Kripke structure file : ");
+        if (ks != null) {
+            System.out.println("Kripke structure already loaded!");
+            System.out.println("Are you sure to overload Kripke Structure ? (y/N)");
+            String overload = readStringInput();
+            if (overload.toLowerCase(Locale.ROOT).equals("n") || overload.toLowerCase(Locale.ROOT).equals("no")) {
+                act();
+            }
+        }
 
+        System.out.print("Enter the path to the Kripke structure file : ");
         String kripkeFilePath = readStringInput();
         ks = KripkeParser.parse(kripkeFilePath);
         try {
             ks.validateKripkeStruct();
         } catch (KripkeException e) {
             printError(e.getMessage());
+            ks = null;
         }
         System.out.println("Loaded this Kripke Structure :\n" + ks);
 
