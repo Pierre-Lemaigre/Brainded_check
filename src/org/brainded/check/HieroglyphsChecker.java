@@ -1,11 +1,15 @@
 package org.brainded.check;
 
 import org.brainded.check.model.KripkeStructure;
+import org.brainded.check.model.ctl.Operand;
+import org.brainded.check.model.ctl.Operator;
+import org.brainded.check.parser.CtlParser;
 import org.brainded.check.parser.KripkeParser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 
 public class HieroglyphsChecker {
 
@@ -21,6 +25,8 @@ public class HieroglyphsChecker {
     private static final BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
 
     private static KripkeStructure ks;
+
+    private static List<Operand> ctlFormulae;
 
     //endregion
 
@@ -72,8 +78,7 @@ public class HieroglyphsChecker {
         System.out.println("\n-- Load Kripke structure file -- \n");
         System.out.print("Enter the path to the Kripke structure file : ");
 
-        String kripkeFilePath = readStringInput();
-        ks = KripkeParser.parse(kripkeFilePath);
+        ks = KripkeParser.parse(readStringInput());
 
         act();
     }
@@ -82,8 +87,7 @@ public class HieroglyphsChecker {
         System.out.println("\n-- Enter CTL state formulae -- \n");
         System.out.print("Enter the CTL state formulae to check : ");
 
-        String ctlFormulae = readStringInput();
-        System.out.println(ctlFormulae);
+        ctlFormulae = CtlParser.Parse(readStringInput());
 
         act();
     }
