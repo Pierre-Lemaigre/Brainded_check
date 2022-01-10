@@ -6,6 +6,7 @@ import org.brainded.check.model.ctl.Atom;
 import org.brainded.check.model.ctl.Operand;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -20,15 +21,23 @@ public class Checker {
         this.ctrlFormulae = ctrlFormulae;
         this.validatingStates = new HashSet<>();
     }
+
     public Set<State> getValidatingStates() {
         return this.validatingStates;
     }
 
-    public Set<State> check(){
+    public Set<State> satisfyFormulae(){
         // TODO
         return this.EX((Atom) ctrlFormulae.get(ctrlFormulae.size()-1));
     }
 
+    private Set<State> mark(Atom proposition, boolean reverse) {
+        if (reverse) {
+            return reverseMarking(proposition);
+        } else {
+            return marking(proposition);
+        }
+    }
 
 
     private Set<State> marking(Atom proposition) {
@@ -62,16 +71,27 @@ public class Checker {
     private Set<State> EX(Atom proposition) {
         Set<State> marked = new HashSet<>();
 
-        this.marking(proposition);
-
         for (State state : this.kripkeStructure.getStates()) {
             if (state.getSuccessors()
-                    .stream().map(successor -> (State) successor)
-                    .allMatch(successor -> this.verify(successor, proposition))) {
+                    .stream()
+                    .anyMatch(successor -> this.verify(successor, proposition))) {
                 marked.add(state);
             }
         }
+        return marked;
+    }
 
+    private Set<State> EU(Atom p1, boolean reverse1, Atom p2, boolean reverse2) {
+        Set<State> l_states = mark(p2, reverse2);
+        Set<State> marked = new HashSet<>();
+        Set<State> verified = new HashSet<>();
+
+        for (State state : l_states) {
+            Set<State> parents = this.kripkeStructure.getParentState(state);
+
+            marked.add(state);
+            l_states.remove(state);
+        }
         return marked;
     }
 

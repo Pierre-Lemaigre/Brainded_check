@@ -1,8 +1,6 @@
 package org.brainded.check.model;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class State {
     private boolean initialState;
@@ -73,4 +71,5 @@ public class State {
                 "stateName='" + stateName + '\'' +
                 '}';
     }
+
 }

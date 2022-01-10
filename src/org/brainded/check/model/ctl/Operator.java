@@ -1,15 +1,17 @@
 package org.brainded.check.model.ctl;
 
 public enum Operator implements Operand {
-    Exist('E'),
-    All('A'),
-    Or('+'),
     And('*'),
-    Next('X'),
+    Or('+'),
     Not('-'),
+    All('A'),
+    Exist('E'),
+    Next('X'),
     True('T'),
-    F('F'),
-    G('G');
+    Finally('F'),
+    Globally('G'),
+    Until('U'),
+    Weak('W');
 
     public final char value;
 

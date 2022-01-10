@@ -2,7 +2,9 @@ package org.brainded.check.model;
 
 import javax.management.InstanceNotFoundException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class KripkeStructure {
 
@@ -53,5 +55,17 @@ public class KripkeStructure {
 
     public List<State> getStates() {
         return this.states;
+    }
+
+    public Set<State> getParentState(State state) {
+        Set<State> parents = new HashSet<>();
+        for (State parent: this.getStates()) {
+            if (parent.getSuccessors()
+                    .stream()
+                    .anyMatch(state1 -> state1.equals(state))) {
+                parents.add(parent);
+            }
+        }
+        return parents;
     }
 }
