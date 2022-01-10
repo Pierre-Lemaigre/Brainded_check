@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class KripkeParser {
 
@@ -35,7 +36,7 @@ public class KripkeParser {
 
             List<LinkedTreeMap<String, List<String>>> transitionsList = (List<LinkedTreeMap<String, List<String>>>) map.get("transitions");
 
-            List<LinkedTreeMap<String, List<Character>>> labelingList = (List<LinkedTreeMap<String, List<Character>>>) map.get("labeling");
+            List<LinkedTreeMap<String, List<String>>> labelingList = (List<LinkedTreeMap<String, List<String>>>) map.get("labeling");
 
             if (statesList == null || initialStatesList == null || transitionsList == null || labelingList == null) {
                 throw new ClassCastException();
@@ -56,9 +57,13 @@ public class KripkeParser {
                 }
 
                 // Add labeling to the ks
-                for (LinkedTreeMap<String, List<Character>> stateLabeling : labelingList) {
+                for (LinkedTreeMap<String, List<String>> stateLabeling : labelingList) {
                     for (String stateString : stateLabeling.keySet()) {
-                        ks.addLabeling(stateString, stateLabeling.get(stateString));
+                        List<Character> labeling = stateLabeling.get(stateString).stream()
+                                .flatMapToInt(String::chars)
+                                .mapToObj(i -> (char) i)
+                                .collect(Collectors.toList());
+                        ks.addLabeling(stateString, labeling);
                     }
                 }
             }

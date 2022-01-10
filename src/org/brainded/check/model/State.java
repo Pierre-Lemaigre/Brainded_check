@@ -66,4 +66,11 @@ public class State {
     public int hashCode() {
         return Objects.hash(this.stateName);
     }
+
+    @Override
+    public String toString() {
+        return "State{" +
+                "stateName='" + stateName + '\'' +
+                '}';
+    }
 }

@@ -15,42 +15,68 @@ public class Checker {
     private List<Operand> ctrlFormulae;
     private final Set<State> validatingStates;
 
-    public Checker(KripkeStructure kripkeStructure, List<Operand> ctrlFormulae){
+    public Checker(KripkeStructure kripkeStructure, List<Operand> ctrlFormulae) {
         this.kripkeStructure = kripkeStructure;
         this.ctrlFormulae = ctrlFormulae;
         this.validatingStates = new HashSet<>();
     }
-
     public Set<State> getValidatingStates() {
         return this.validatingStates;
     }
 
-    public Set<State> marking(Atom proposition){
+    public Set<State> check(){
+        // TODO
+        return this.EX((Atom) ctrlFormulae.get(ctrlFormulae.size()-1));
+    }
+
+
+
+    private Set<State> marking(Atom proposition) {
         Set<State> marked = new HashSet<>();
-        for (State state: this.kripkeStructure.getStates()) {
-            if(state.getLabels().contains(proposition.getAtomicName()))
+        for (State state : this.kripkeStructure.getStates()) {
+            if (this.verify(state, proposition))
                 marked.add(state);
         }
         return marked;
     }
 
-    public Set<State> reverseMarking(Atom proposition) {
+    private Set<State> reverseMarking(Atom proposition) {
         Set<State> marked = new HashSet<>();
-        for (State state: this.kripkeStructure.getStates()) {
-            if(!state.getLabels().contains(proposition.getAtomicName()))
+        for (State state : this.kripkeStructure.getStates()) {
+            if (!this.verify(state, proposition))
                 marked.add(state);
         }
         return marked;
     }
 
-    public Set<State> AND(Atom p1, Atom p2) {
+    private Set<State> AND(Atom p1, Atom p2) {
         Set<State> marked = new HashSet<>();
-        for (State state: this.kripkeStructure.getStates()) {
-            if (state.getLabels().contains(p1.getAtomicName()) &&
-                state.getLabels().contains(p2.getAtomicName())) {
+        for (State state : this.kripkeStructure.getStates()) {
+            if (this.verify(state, p1) && this.verify(state, p2)) {
                 marked.add(state);
             }
         }
         return marked;
     }
+
+    private Set<State> EX(Atom proposition) {
+        Set<State> marked = new HashSet<>();
+
+        this.marking(proposition);
+
+        for (State state : this.kripkeStructure.getStates()) {
+            if (state.getSuccessors()
+                    .stream().map(successor -> (State) successor)
+                    .allMatch(successor -> this.verify(successor, proposition))) {
+                marked.add(state);
+            }
+        }
+
+        return marked;
+    }
+
+    private boolean verify(State state, Atom proposition) {
+        return state.getLabels().contains(proposition.getAtomicName());
+    }
+
 }
