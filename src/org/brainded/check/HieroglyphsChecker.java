@@ -92,7 +92,8 @@ public class HieroglyphsChecker {
 
         Checker checker = new Checker(ks, ctlFormulae);
 
-        System.out.println(checker.check());
+
+        System.out.println(checker.satisfyFormulae());
 
         act();
     }

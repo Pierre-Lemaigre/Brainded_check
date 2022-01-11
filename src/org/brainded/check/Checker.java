@@ -5,10 +5,7 @@ import org.brainded.check.model.State;
 import org.brainded.check.model.ctl.Atom;
 import org.brainded.check.model.ctl.Operand;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Checker {
 
@@ -28,7 +25,8 @@ public class Checker {
 
     public Set<State> satisfyFormulae(){
         // TODO
-        return this.EX((Atom) ctrlFormulae.get(ctrlFormulae.size()-1));
+
+        return this.EU(new Atom('p'), false, new Atom('v'), false);
     }
 
     private Set<State> mark(Atom proposition, boolean reverse) {
@@ -84,13 +82,32 @@ public class Checker {
     private Set<State> EU(Atom p1, boolean reverse1, Atom p2, boolean reverse2) {
         Set<State> l_states = mark(p2, reverse2);
         Set<State> marked = new HashSet<>();
-        Set<State> verified = new HashSet<>();
+        Set<State> checked_states = new HashSet<>();
+        Set<State> nextState = new HashSet<>();
+        boolean states_remain = true;
 
-        for (State state : l_states) {
-            Set<State> parents = this.kripkeStructure.getParentState(state);
+        while(states_remain) {
+            for (Iterator<State> it = l_states.iterator(); it.hasNext();){
+                State currentState = it.next();
+                marked.add(currentState);
+                it.remove();
 
-            marked.add(state);
-            l_states.remove(state);
+                Set<State> parents = this.kripkeStructure.getParentState(currentState);
+                for (State parent: parents) {
+                    if (!checked_states.contains(parent)) {
+                        checked_states.add(parent);
+                        if (verify(parent, p1)) {
+                            nextState.add(parent);
+                        }
+                    }
+                }
+            }
+            if (nextState.isEmpty()) {
+                states_remain =  false;
+            } else {
+                l_states.addAll(nextState);
+                nextState.clear();
+            }
         }
         return marked;
     }
