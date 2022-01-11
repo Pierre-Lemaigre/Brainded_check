@@ -75,7 +75,7 @@ public class KripkeStructure {
 
         for (State state : states) {
             for (Character label : state.getLabels()) {
-                if (!labelMatch.matcher(label).find()) {
+                if (!labelMatch.matcher(label.toString()).find()) {
                     throw new KripkeException(
                             String.format("This state %s has an unauthorized label : %s", state.getStateName(), label)
                     );

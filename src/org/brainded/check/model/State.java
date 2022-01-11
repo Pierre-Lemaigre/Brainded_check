@@ -68,6 +68,7 @@ public class State {
     @Override
     public String toString() {
         String labels = "{Labels: " + this.labels.stream()
+                .map(Object::toString)
                 .reduce((s, s2) -> s + ',' + s2)
                 .orElse("Empty Labels")
                 + "}";
