@@ -81,4 +81,8 @@ public class State {
 
         return "State [" + this.stateName + ": " + labels + " | " + successors + "],";
     }
+
+    public String minimalPrint() {
+        return "State [" + this.stateName + "]";
+    }
 }

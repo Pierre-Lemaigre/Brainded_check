@@ -1,6 +1,7 @@
 package org.brainded.check;
 
 import org.brainded.check.model.KripkeStructure;
+import org.brainded.check.model.State;
 import org.brainded.check.model.ctl.Atom;
 import org.brainded.check.model.ctl.Operand;
 import org.brainded.check.model.ctl.Operator;
@@ -98,6 +99,7 @@ public class HieroglyphsChecker {
             printError(e.getMessage());
             ks = null;
         }
+        act();
     }
 
     private static void enterCtl() {
@@ -106,7 +108,10 @@ public class HieroglyphsChecker {
 
         ctlFormulae = CtlParser.Parse(readStringInput());
         Checker checker = new Checker(ks, ctlFormulae);
-        System.out.println(checker.satisfyFormulae());
+        System.out.println("State that satisfy the formula: ");
+        for (State state: checker.satisfyFormulae()) {
+            System.out.println(state.minimalPrint());
+        }
 
         act();
     }
