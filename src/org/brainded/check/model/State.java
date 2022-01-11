@@ -67,9 +67,17 @@ public class State {
 
     @Override
     public String toString() {
-        return "State{" +
-                "stateName='" + stateName + '\'' +
-                '}';
-    }
+        String labels = "{Labels: " + this.labels.stream()
+                .reduce((s, s2) -> s + ',' + s2)
+                .orElse("Empty Labels")
+                + "}";
 
+        String successors = "{Successors: " + this.successors.stream()
+                .map(State::getStateName)
+                .reduce((s, s2) -> s + "," + s2)
+                .orElse("Empty")
+                + "} ";
+
+        return "State [" + this.stateName + ": " + labels + " | " + successors + "],";
+    }
 }

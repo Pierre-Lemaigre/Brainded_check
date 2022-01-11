@@ -5,11 +5,13 @@ import org.brainded.check.model.ctl.Atom;
 import org.brainded.check.model.ctl.Operand;
 import org.brainded.check.model.ctl.Operator;
 import org.brainded.check.parser.CtlParser;
+import org.brainded.check.model.exceptions.KripkeException;
 import org.brainded.check.parser.KripkeParser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Locale;
 import java.util.List;
 
 public class HieroglyphsChecker {
@@ -77,11 +79,25 @@ public class HieroglyphsChecker {
     //region Actions
     private static void loadKripke() {
         System.out.println("\n-- Load Kripke structure file -- \n");
+        if (ks != null) {
+            System.out.println("Kripke structure already loaded!");
+            System.out.println("Are you sure to overload Kripke Structure ? (y/N)");
+            String overload = readStringInput();
+            if (overload.toLowerCase(Locale.ROOT).equals("n") || overload.toLowerCase(Locale.ROOT).equals("no")) {
+                act();
+            }
+        }
+
         System.out.print("Enter the path to the Kripke structure file : ");
-
-        ks = KripkeParser.parse(readStringInput());
-
-        act();
+        String kripkeFilePath = readStringInput();
+        ks = KripkeParser.parse(kripkeFilePath);
+        try {
+            ks.validateKripkeStruct();
+            System.out.println("Loaded this Kripke Structure :\n" + ks);
+        } catch (KripkeException e) {
+            printError(e.getMessage());
+            ks = null;
+        }
     }
 
     private static void enterCtl() {
@@ -89,10 +105,7 @@ public class HieroglyphsChecker {
         System.out.print("Enter the CTL state formulae to check : ");
 
         ctlFormulae = CtlParser.Parse(readStringInput());
-
         Checker checker = new Checker(ks, ctlFormulae);
-
-
         System.out.println(checker.satisfyFormulae());
 
         act();
