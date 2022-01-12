@@ -11,8 +11,7 @@ public enum Operator implements Operand {
     True('T'),
     Finally('F'),
     Globally('G'),
-    Until('U'),
-    Weak('W');
+    Until('U');
 
     public final char value;
 

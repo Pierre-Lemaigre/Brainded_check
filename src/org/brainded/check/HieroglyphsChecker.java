@@ -107,7 +107,8 @@ public class HieroglyphsChecker {
         System.out.print("Enter the CTL state formulae to check : ");
 
         try {
-            ctlFormulae = CtlParser.parse(readStringInput());
+            CtlParser ctlParser = new CtlParser();
+            ctlFormulae = ctlParser.parse(readStringInput());
             Checker checker = new Checker(ks, ctlFormulae);
             System.out.println("State that satisfy the formula: ");
             for (State state: checker.satisfyFormulae()) {
@@ -115,8 +116,6 @@ public class HieroglyphsChecker {
             }
         } catch (CtlException e) {
             printError(e.getMessage());
-        } catch (ExecutionControl.NotImplementedException e){
-            printError("NotImplementedException: " + e.getMessage());
         }
 
 
