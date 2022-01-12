@@ -6,16 +6,10 @@ import org.brainded.check.model.ctl.Parenthesis;
 import java.util.List;
 
 public class CtlUtils {
-    public static List<Operand> subtractParenthesis(List<Operand> formulae, Parenthesis firstOperator) {
-        switch (firstOperator) {
-            case Open -> {
-                for (int index = formulae.size() - 1; index > 0; index--) {
-                    if (formulae.get(index) == Parenthesis.Close)
-                        return formulae.subList(0, index - 1);
-                }
-            }
-            case Close -> throw new RuntimeException("Error parenthesis");
-            default -> throw new RuntimeException("Unkown Parenthesis");
+    public static List<Operand> subtractParenthesis(List<Operand> formulae) {
+        for (int index = formulae.size() - 1; index > 0; index--) {
+            if (formulae.get(index) == Parenthesis.Close)
+                return formulae.subList(1, index - 1);
         }
         return formulae;
     }

@@ -158,44 +158,6 @@ public class Checker {
     }
 
     private Set<State> marking(List<Operand> formulae) {
-        Operand firstOperator = formulae.stream().findFirst().orElseThrow();
-        if (firstOperator instanceof Atom) {
-            return resolveAtom(formulae, (Atom) firstOperator);
-        } else if (firstOperator instanceof Parenthesis) {
-            return marking(CtlUtils.subtractParenthesis(formulae, (Parenthesis) firstOperator));
-        } else {
-            return resolveOperator(formulae, firstOperator);
-        }
+        return
     }
-
-    private Set<State> resolveOperator(List<Operand> formulae, Operand firstOperator) {
-        switch ((Operator) firstOperator) {
-            case Not -> {
-                if (formulae.get(1) instanceof Parenthesis) {
-
-                }
-            }
-            case Exist -> {
-
-            }
-            case True -> {
-            }
-            case Until -> {
-            }
-            default -> throw new NoSuchElementException(
-                    String.format("Operator %s is not implemented, please consider find equivalence Operator", firstOperator));
-        }
-        return null;
-    }
-
-    private Set<State> resolveAtom(List<Operand> formulae, Atom firstOperator) {
-        if (formulae.size() == 1) {
-            return marking(firstOperator);
-        } else {
-            Set<State> mark =  marking(firstOperator);
-            mark.addAll(marking(CtlUtils.minusFirstIndex(formulae)));
-            return mark;
-        }
-    }
-
 }
