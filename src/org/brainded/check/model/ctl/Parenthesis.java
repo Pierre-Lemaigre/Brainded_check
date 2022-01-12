@@ -17,6 +17,4 @@ public enum Parenthesis implements Operand {
         }
         return null;
     }
-
-
 }
