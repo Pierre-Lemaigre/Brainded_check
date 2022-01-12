@@ -13,4 +13,9 @@ public class Atom implements Operand {
         return this.atomicName;
     }
 
+
+    @Override
+    public String toString() {
+        return String.valueOf(this.atomicName);
+    }
 }

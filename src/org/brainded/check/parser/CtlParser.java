@@ -1,10 +1,8 @@
 package org.brainded.check.parser;
 
-import org.brainded.check.model.ctl.Atom;
-import org.brainded.check.model.ctl.Operand;
-import org.brainded.check.model.ctl.Operator;
-import org.brainded.check.model.ctl.Parenthesis;
+import org.brainded.check.model.ctl.*;
 import org.brainded.check.model.exceptions.CtlException;
+import org.brainded.check.utils.CtlUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,19 +10,20 @@ import java.util.Objects;
 
 public class CtlParser {
 
-    private List<Operand> ctlFormulae = new ArrayList<>();
+    private CtlFormulae ctlFormulae = new CtlFormulae();
     private int parenthesisCount = 0;
 
-    public List<Operand> parse(String ctlFormulaeString) {
+    public CtlFormulae parse(String ctlFormulaeString) {
 
         char[] ctlFormulaeCharArray = ctlFormulaeString.toCharArray();
 
         for (char character : ctlFormulaeCharArray)
             this.verifyAndAddToCtlFormulae(this.parseCharToOperand(character));
 
+        this.verifyParenthesis();
+
         this.ctlFormulae = this.translate(this.ctlFormulae);
 
-        this.verifyParenthesis();
 
         return ctlFormulae;
     }
@@ -32,13 +31,13 @@ public class CtlParser {
     // region Utils
 
     private void verifyAndAddToCtlFormulae(Operand operand) {
-        int ctlFormulaeSize = this.ctlFormulae.size();
+        int ctlFormulaeSize = this.ctlFormulae.getNbOperands();
         Operand lastOperator;
 
-        this.ctlFormulae.add(operand);
+        this.ctlFormulae.addOperands(operand);
 
         if (ctlFormulaeSize > 0) {
-            lastOperator = this.ctlFormulae.get(ctlFormulaeSize - 1);
+            lastOperator = this.ctlFormulae.getOperand(ctlFormulaeSize - 1);
 
             if (operand instanceof Operator)
                 this.verifyOperator(operand, lastOperator);
@@ -63,54 +62,155 @@ public class CtlParser {
 
     // region Translators
 
-    private List<Operand> translate(List<Operand> ctlSubFormulae) {
-        List<Operand> translated = new ArrayList<>();
+    private CtlFormulae translate(CtlFormulae ctlFormulae) {
+        CtlFormulae translated = null;
 
-        for (int i = 0; i < ctlSubFormulae.size() - 1; i++) {
-            switch ((Operator) ctlSubFormulae.get(i)) {
-                case All -> {
+        for (int i = 0; i < ctlFormulae.getNbOperands() - 1; i++) {
 
-                    // AXp
-                    if (ctlSubFormulae.get(i + 1) == Operator.Next) {
-                        Operand operandPlus2 = ctlSubFormulae.get(i + 2);
+            Operand operand = ctlFormulae.getOperand(i);
+            Operand nextOperand = ctlFormulae.getOperand(i + 1);
 
-                        if (operandPlus2 == Parenthesis.Open) {
-                            //axTranslated = translate();
-                        } else if (operandPlus2 instanceof Atom) {
-                            translated.add(Operator.Not);
-                            translated.add(Operator.Exist);
-                            translated.add(Parenthesis.Open);
-                            translated.add(Operator.True);
-                            translated.add(Operator.Until);
-                            translated.add(Parenthesis.Open);
-                            translated.add(Operator.Not);
-                            translated.add(operandPlus2);
-                            translated.add(Parenthesis.Close);
-                            translated.add(Parenthesis.Close);
-                            ctlSubFormulae.removeAll(ctlSubFormulae.subList(i, i + 2));
-                            ctlSubFormulae.addAll(i, translated);
-                        } else
-                            throw new CtlException("translate", "AX error");
+            if (operand instanceof Operator) {
+                switch ((Operator) operand) {
+                    case All -> {
+
+                        // AX
+                        if (nextOperand == Operator.Next)
+                            translated = this.translateAX(ctlFormulae, i);
+
+                        // AG
+                        if (nextOperand == Operator.Globally)
+                            translated = this.translateAG(ctlFormulae, i);
+
+                        // AF
+                        if (nextOperand == Operator.Finally)
+                            translated = this.translateAF(ctlFormulae, i);
                     }
-
-
+                    case Exist -> {
+                        // EF
+                        if (nextOperand == Operator.Finally)
+                            translated = this.translateEF(ctlFormulae, i);
+                    }
+                    case Next -> {
+                    }
+                    case True -> {
+                    }
+                    case Finally -> {
+                    }
+                    case Globally -> {
+                    }
+                    case Until -> {
+                    }
                 }
 
-                case Exist -> {
-                }
-                case Next -> {
-                }
-                case True -> {
-                }
-                case Finally -> {
-                }
-                case Globally -> {
-                }
-                case Until -> {
-                }
+                if (translated != null)
+                    i = i + translated.getNbOperands() - 1;
             }
         }
 
+        return translated;
+    }
+
+    private CtlFormulae translateAX(CtlFormulae ctlFormulae, int i) {
+        CtlFormulae translated = new CtlFormulae();
+        Operand operandPlus2 = ctlFormulae.getOperand(i + 2);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Not);
+        translated.addOperands(Operator.Exist);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.True);
+        translated.addOperands(Operator.Until);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Not);
+
+        if (operandPlus2 == Parenthesis.Open)
+            translated.addOperands(
+                    translate(CtlUtils.extractNextSubFormulae(ctlFormulae, i + 2))
+            );
+        else if (operandPlus2 instanceof Atom)
+            translated.addOperands(operandPlus2);
+        else
+            throw new CtlException("translate", "AX error");
+
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        return translated;
+    }
+
+    private CtlFormulae translateAG(CtlFormulae ctlFormulae, int i) {
+        CtlFormulae translated = new CtlFormulae();
+        Operand operandPlus2 = ctlFormulae.getOperand(i + 2);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Not);
+        translated.addOperands(Operator.Exist);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.True);
+        translated.addOperands(Operator.Until);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Not);
+        translated.addOperands(Parenthesis.Open);
+
+        if (operandPlus2 == Parenthesis.Open)
+            translated.addOperands(
+                    translate(CtlUtils.extractNextSubFormulae(ctlFormulae, i + 2))
+            );
+        else if (operandPlus2 instanceof Atom)
+            translated.addOperands(operandPlus2);
+        else
+            throw new CtlException("translate", "AX error");
+
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        return translated;
+    }
+
+    private CtlFormulae translateAF(CtlFormulae ctlFormulae, int i) {
+        CtlFormulae translated = new CtlFormulae();
+        Operand operandPlus2 = ctlFormulae.getOperand(i + 2);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Not);
+        translated.addOperands(Operator.Exist);
+        translated.addOperands(Operator.Globally);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Not);
+
+        if (operandPlus2 == Parenthesis.Open)
+            translated.addOperands(
+                    translate(CtlUtils.extractNextSubFormulae(ctlFormulae, i + 2))
+            );
+        else if (operandPlus2 instanceof Atom)
+            translated.addOperands(operandPlus2);
+        else
+            throw new CtlException("translate", "AF error");
+
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        return translated;
+    }
+
+    private CtlFormulae translateEF(CtlFormulae ctlFormulae, int i) {
+        CtlFormulae translated = new CtlFormulae();
+        Operand operandPlus2 = ctlFormulae.getOperand(i + 2);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Exist);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.True);
+        translated.addOperands(Operator.Until);
+
+        if (operandPlus2 == Parenthesis.Open)
+            translated.addOperands(
+                    translate(CtlUtils.extractNextSubFormulae(ctlFormulae, i + 2))
+            );
+        else if (operandPlus2 instanceof Atom)
+            translated.addOperands(operandPlus2);
+        else
+            throw new CtlException("translate", "EF error");
+
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
         return translated;
     }
 
@@ -203,9 +303,6 @@ public class CtlParser {
             this.parenthesisCount--;
         else
             throw new CtlException("verifyParenthesis", "Invalid parenthesis");
-
-        if (this.parenthesisCount < -1 || this.parenthesisCount > 1)
-            throw new CtlException("verifyParenthesis");
     }
 
     private void verifyOperator(Operand operand, Operand lastOperator) {

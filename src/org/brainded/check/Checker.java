@@ -158,6 +158,6 @@ public class Checker {
     }
 
     private Set<State> marking(List<Operand> formulae) {
-        return
+        return null;
     }
 }
