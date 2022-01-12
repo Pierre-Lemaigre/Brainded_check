@@ -37,7 +37,6 @@ public class Checker {
         }
     }
 
-
     private Set<State> marking(Atom proposition) {
         Set<State> marked = new HashSet<>();
         for (State state : this.kripkeStructure.getStates()) {

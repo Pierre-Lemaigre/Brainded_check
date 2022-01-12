@@ -24,7 +24,7 @@ public class KripkeParser {
             Gson gson = new Gson();
 
             // TODO Remove
-            kripkeFilePath = "./ressource/kripke_2.json";
+            kripkeFilePath = "./ressource/kripke_1.json";
 
             Reader reader = Files.newBufferedReader(Paths.get(kripkeFilePath));
 

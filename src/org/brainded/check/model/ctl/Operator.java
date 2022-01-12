@@ -4,6 +4,7 @@ public enum Operator implements Operand {
     And('*'),
     Or('+'),
     Not('-'),
+    Imply('>'),
     All('A'),
     Exist('E'),
     Next('X'),
