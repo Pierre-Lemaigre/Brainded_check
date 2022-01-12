@@ -2,6 +2,7 @@ package org.brainded.check;
 
 import jdk.jshell.spi.ExecutionControl;
 import org.brainded.check.model.KripkeStructure;
+import org.brainded.check.model.State;
 import org.brainded.check.model.ctl.Operand;
 import org.brainded.check.model.exceptions.CtlException;
 import org.brainded.check.parser.CtlParser;
@@ -94,11 +95,11 @@ public class HieroglyphsChecker {
         try {
             ks.validateKripkeStruct();
             System.out.println("Loaded this Kripke Structure :\n" + ks);
-            act();
         } catch (KripkeException e) {
             printError(e.getMessage());
             ks = null;
         }
+        act();
     }
 
     private static void enterCtl() {
@@ -108,12 +109,16 @@ public class HieroglyphsChecker {
         try {
             ctlFormulae = CtlParser.parse(readStringInput());
             Checker checker = new Checker(ks, ctlFormulae);
-            System.out.println(checker.satisfyFormulae());
+            System.out.println("State that satisfy the formula: ");
+            for (State state: checker.satisfyFormulae()) {
+                System.out.println(state.minimalPrint());
+            }
         } catch (CtlException e) {
             printError(e.getMessage());
         } catch (ExecutionControl.NotImplementedException e){
             printError("NotImplementedException: " + e.getMessage());
         }
+
 
         act();
     }

@@ -26,7 +26,7 @@ public class Checker {
     public Set<State> satisfyFormulae(){
         // TODO
 
-        return this.EU(new Atom('p'), false, new Atom('v'), false);
+        return this.AU(new Atom('p'), false, new Atom('v'), false);
     }
 
     private Set<State> mark(Atom proposition, boolean reverse) {
@@ -79,19 +79,20 @@ public class Checker {
     }
 
     private Set<State> EU(Atom p1, boolean reverse1, Atom p2, boolean reverse2) {
-        Set<State> l_states = mark(p2, reverse2);
         Set<State> marked = new HashSet<>();
-        Set<State> checked_states = new HashSet<>();
+        Set<State> sp2 = mark(p2, reverse2);
         Set<State> nextState = new HashSet<>();
-        boolean states_remain = true;
+        Set<State> checked_states = new HashSet<>();
+        Set<State> parents;
+        State currentState;
 
-        while(states_remain) {
-            for (Iterator<State> it = l_states.iterator(); it.hasNext();){
-                State currentState = it.next();
+        do {
+            for (Iterator<State> it = sp2.iterator(); it.hasNext();){
+                currentState = it.next();
                 marked.add(currentState);
                 it.remove();
 
-                Set<State> parents = this.kripkeStructure.getParentState(currentState);
+                parents = this.kripkeStructure.getParentState(currentState);
                 for (State parent: parents) {
                     if (!checked_states.contains(parent)) {
                         checked_states.add(parent);
@@ -101,13 +102,48 @@ public class Checker {
                     }
                 }
             }
-            if (nextState.isEmpty()) {
-                states_remain =  false;
-            } else {
-                l_states.addAll(nextState);
+            if (!nextState.isEmpty()) {
+                sp2.addAll(nextState);
                 nextState.clear();
             }
+        } while (!sp2.isEmpty());
+        return marked;
+    }
+
+    private Set<State> AU(Atom p1, boolean rev1, Atom p2, boolean rev2) {
+        Set<State> marked = new HashSet<>();
+        Set<State> sp2 = mark(p2, rev2);
+        Set<State> nextState = new HashSet<>();
+        Map<String, Integer> successors = new HashMap<>();
+        Set<State> parents;
+        State currentState;
+
+        for (State current: this.kripkeStructure.getStates()) {
+            successors.put(current.getStateName(), current.getSuccessors().size());
         }
+
+        do {
+            for (Iterator<State> it = sp2.iterator(); it.hasNext();) {
+                currentState = it.next();
+                marked.add(currentState);
+                it.remove();
+
+                parents = this.kripkeStructure.getParentState(currentState);
+                for (State parent: parents) {
+                    String name = parent.getStateName();
+                    Integer val = successors.get(name);
+                    val--;
+                    successors.replace(name,val);
+                    if (val == 0 && this.verify(parent, p1) && !marked.contains(parent)) {
+                       nextState.add(parent);
+                    }
+                }
+            }
+            if (!nextState.isEmpty()) {
+                sp2.addAll(nextState);
+                nextState.clear();
+            }
+        } while (!sp2.isEmpty());
         return marked;
     }
 
