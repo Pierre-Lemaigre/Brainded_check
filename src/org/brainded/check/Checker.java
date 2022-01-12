@@ -10,7 +10,7 @@ import java.util.*;
 public class Checker {
 
     private final KripkeStructure kripkeStructure;
-    private List<Operand> ctrlFormulae;
+    private final List<Operand> ctrlFormulae;
     private final Set<State> validatingStates;
 
     public Checker(KripkeStructure kripkeStructure, List<Operand> ctrlFormulae) {
@@ -25,18 +25,12 @@ public class Checker {
 
     public Set<State> satisfyFormulae(){
         // TODO
-
-        return this.AU(new Atom('p'), false, new Atom('v'), false);
+        return marking(this.ctrlFormulae);
     }
 
-    private Set<State> mark(Atom proposition, boolean reverse) {
-        if (reverse) {
-            return reverseMarking(proposition);
-        } else {
-            return marking(proposition);
-        }
+    private boolean verify(State state, Atom proposition) {
+        return state.getLabels().contains(proposition.getAtomicName());
     }
-
 
     private Set<State> marking(Atom proposition) {
         Set<State> marked = new HashSet<>();
@@ -47,41 +41,51 @@ public class Checker {
         return marked;
     }
 
-    private Set<State> reverseMarking(Atom proposition) {
-        Set<State> marked = new HashSet<>();
-        for (State state : this.kripkeStructure.getStates()) {
-            if (!this.verify(state, proposition))
-                marked.add(state);
-        }
-        return marked;
+    private Set<State> marking(List<Operand> formulae) {
+        return marking(formulae.subList(0, formulae.size()-1));
     }
 
-    private Set<State> AND(Atom p1, Atom p2) {
-        Set<State> marked = new HashSet<>();
-        for (State state : this.kripkeStructure.getStates()) {
-            if (this.verify(state, p1) && this.verify(state, p2)) {
-                marked.add(state);
+    private Set<State> NOT(List<Operand> formulae) {
+        Set<State> marked = marking(formulae);
+        Set<State> to_mark = new HashSet<>();
+        for (State current : this.kripkeStructure.getStates()) {
+            if (!marked.contains(current)) {
+                to_mark.add(current);
             }
         }
-        return marked;
+        return to_mark;
     }
 
-    private Set<State> EX(Atom proposition) {
-        Set<State> marked = new HashSet<>();
-
-        for (State state : this.kripkeStructure.getStates()) {
-            if (state.getSuccessors()
-                    .stream()
-                    .anyMatch(successor -> this.verify(successor, proposition))) {
-                marked.add(state);
+    private Set<State> AND(List<Operand> formulae_1, List<Operand> formulae_2) {
+        Set<State> sfp1 = marking(formulae_1);
+        Set<State> sfp2 = marking(formulae_2);
+        Set<State> to_mark = new HashSet<>();
+        for (State current : this.kripkeStructure.getStates()) {
+            if (sfp1.contains(current) && sfp2.contains(current)) {
+                to_mark.add(current);
             }
         }
-        return marked;
+        return to_mark;
     }
 
-    private Set<State> EU(Atom p1, boolean reverse1, Atom p2, boolean reverse2) {
-        Set<State> marked = new HashSet<>();
-        Set<State> sp2 = mark(p2, reverse2);
+    private Set<State> EX(List<Operand> formulae) {
+        Set<State> marked = marking(formulae);
+        List<State> successors;
+        Set<State> to_mark = new HashSet<>();
+
+        for (State current : this.kripkeStructure.getStates()) {
+            successors = current.getSuccessors();
+            if (!Collections.disjoint(marked, successors)) {
+                to_mark.add(current);
+            }
+        }
+        return to_mark;
+    }
+
+    private Set<State> EU(List<Operand> formulae_1, List<Operand> formulae_2) {
+        Set<State> sp1 = marking(formulae_1);
+        Set<State> sp2 = marking(formulae_2);
+        Set<State> to_mark = new HashSet<>();
         Set<State> nextState = new HashSet<>();
         Set<State> checked_states = new HashSet<>();
         Set<State> parents;
@@ -90,14 +94,14 @@ public class Checker {
         do {
             for (Iterator<State> it = sp2.iterator(); it.hasNext();){
                 currentState = it.next();
-                marked.add(currentState);
+                to_mark.add(currentState);
                 it.remove();
 
                 parents = this.kripkeStructure.getParentState(currentState);
                 for (State parent: parents) {
                     if (!checked_states.contains(parent)) {
                         checked_states.add(parent);
-                        if (verify(parent, p1)) {
+                        if (sp1.contains(parent)) {
                             nextState.add(parent);
                         }
                     }
@@ -108,12 +112,13 @@ public class Checker {
                 nextState.clear();
             }
         } while (!sp2.isEmpty());
-        return marked;
+        return to_mark;
     }
 
-    private Set<State> AU(Atom p1, boolean rev1, Atom p2, boolean rev2) {
-        Set<State> marked = new HashSet<>();
-        Set<State> sp2 = mark(p2, rev2);
+    private Set<State> AU(List<Operand> formulae_1, List<Operand> formulae_2) {
+        Set<State> sp1 = marking(formulae_1);
+        Set<State> sp2 = marking(formulae_2);
+        Set<State> to_mark = new HashSet<>();
         Set<State> nextState = new HashSet<>();
         Map<String, Integer> successors = new HashMap<>();
         Set<State> parents;
@@ -126,7 +131,7 @@ public class Checker {
         do {
             for (Iterator<State> it = sp2.iterator(); it.hasNext();) {
                 currentState = it.next();
-                marked.add(currentState);
+                to_mark.add(currentState);
                 it.remove();
 
                 parents = this.kripkeStructure.getParentState(currentState);
@@ -135,7 +140,7 @@ public class Checker {
                     Integer val = successors.get(name);
                     val--;
                     successors.replace(name,val);
-                    if (val == 0 && this.verify(parent, p1) && !marked.contains(parent)) {
+                    if (val == 0 && sp1.contains(parent) && !to_mark.contains(parent)) {
                        nextState.add(parent);
                     }
                 }
@@ -145,11 +150,6 @@ public class Checker {
                 nextState.clear();
             }
         } while (!sp2.isEmpty());
-        return marked;
+        return to_mark;
     }
-
-    private boolean verify(State state, Atom proposition) {
-        return state.getLabels().contains(proposition.getAtomicName());
-    }
-
 }
