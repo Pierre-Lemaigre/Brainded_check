@@ -7,6 +7,7 @@ import org.brainded.check.model.ctl.*;
 import org.brainded.check.utils.CtlUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Checker {
 
@@ -24,9 +25,10 @@ public class Checker {
         return this.validatingStates;
     }
 
-    public Set<State> satisfyFormulae() {
-        // TODO
-        return marking(this.ctrlFormulae);
+    public boolean satisfyFormulae() {
+        this.validatingStates.addAll(marking(this.ctrlFormulae));
+        Set<State> validInitialStates = this.validatingStates.stream().filter(State::isInitialState).collect(Collectors.toSet());
+        return validInitialStates.equals(this.kripkeStructure.getInitialStates());
     }
 
     private boolean verify(State state, Atom proposition) {
@@ -168,8 +170,14 @@ public class Checker {
     }
 
     private Set<State> computeAtom(List<Operand> formulae, Atom operand) {
-        Set<State> states = marking(operand);
-        if (formulae.size() > 1) states.addAll(marking(CtlUtils.minusFirstIndex(formulae)));
+        if (formulae.size() > 1) {
+            if (formulae.get(1) instanceof Operator operator && operator == Operator.And) {
+                return this.AND(CtlUtils.uniqueAtIndex(formulae, 0), CtlUtils.minusXIndex(formulae, 2));
+            }
+            Set<State> states = marking(operand);
+            states.addAll(marking(CtlUtils.minusFirstIndex(formulae)));
+            return states;
+        }
         return marking(operand);
     }
 
@@ -182,7 +190,7 @@ public class Checker {
     private Set<State> computeOperator(List<Operand> formulae, Operator operand) {
         switch (operand) {
             case Not -> {
-                return this.NOT(CtlUtils.minusFirstIndex(formulae));
+                return computeNotOperator(formulae);
             }
             case All -> {
                 return computeAllOperator(formulae);
@@ -196,6 +204,18 @@ public class Checker {
             default -> throw new RuntimeException(
                     String.format("Operand %s is not suported", operand));
         }
+    }
+
+    private Set<State> computeNotOperator(List<Operand> formulae) {
+        if (formulae.size() >= 2) {
+            if (formulae.size() > 2) {
+                return this.NOT(CtlUtils.minusFirstIndex(formulae));
+            }
+            if (formulae.get(1) instanceof CtlFormulae operand) {
+                return marking(operand.getOperands());
+            }
+        }
+        throw new RuntimeException("CTL Syntax error");
     }
 
     private Set<State> computeExistOperator(List<Operand> formulae) {
@@ -238,7 +258,8 @@ public class Checker {
 
     private Set<State> computeTrueOperator(List<Operand> formulae) {
         Set<State> states = new HashSet<>(this.kripkeStructure.getStates());
-        states.addAll(marking(CtlUtils.minusFirstIndex(formulae)));
+        if (formulae.size() > 1)
+            states.addAll(marking(CtlUtils.minusFirstIndex(formulae)));
         return states;
     }
 }

@@ -34,14 +34,14 @@ public class CtlFormulae implements Operand {
     @Override
     public String toString() {
         StringBuilder stringRepresentation = new StringBuilder();
-        for (Operand op : this.operands)
+        for (Operand op : this.operands) {
             if (op instanceof Operator)
                 stringRepresentation.append(((Operator) op).value);
             else if (op instanceof Parenthesis)
                 stringRepresentation.append(((Parenthesis) op).value);
             else
                 stringRepresentation.append(op.toString());
-
+        }
         return stringRepresentation.toString();
     }
 }

@@ -32,21 +32,21 @@ public class CtlUtils {
 
     public static List<Operand> minusFirstIndex(List<Operand> formulae) {
         if (formulae.size() > 1) {
-            return formulae.subList(1, formulae.size() - 1);
+            return formulae.subList(1, formulae.size());
         }
         return formulae;
     }
 
     public static List<Operand> minusXIndex(List<Operand> formulae, int index) {
         if (formulae.size() > index) {
-            return formulae.subList(index, formulae.size() - 1);
+            return formulae.subList(index, formulae.size());
         }
         return formulae;
     }
 
     public static List<Operand> uniqueAtIndex(List<Operand> formulae, int index) {
         if (formulae.size() >= index) {
-            return formulae.subList(index, index);
+            return formulae.subList(index, index+1);
         }
         return formulae;
     }
