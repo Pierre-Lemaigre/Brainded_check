@@ -20,4 +20,18 @@ public class CtlUtils {
         }
         return formulae;
     }
+
+    public static List<Operand> minusXIndex(List<Operand> formulae, int index) {
+        if (formulae.size() > index) {
+            return formulae.subList(index, formulae.size() - 1);
+        }
+        return formulae;
+    }
+
+    public static List<Operand> uniqueAtIndex(List<Operand> formulae, int index) {
+        if (formulae.size() >= index) {
+            return formulae.subList(index, index);
+        }
+        return formulae;
+    }
 }
