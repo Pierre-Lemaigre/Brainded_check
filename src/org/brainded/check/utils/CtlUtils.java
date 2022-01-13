@@ -1,17 +1,33 @@
 package org.brainded.check.utils;
 
+import org.brainded.check.model.ctl.CtlFormulae;
 import org.brainded.check.model.ctl.Operand;
 import org.brainded.check.model.ctl.Parenthesis;
 
 import java.util.List;
 
 public class CtlUtils {
-    public static List<Operand> subtractParenthesis(List<Operand> formulae) {
-        for (int index = formulae.size() - 1; index > 0; index--) {
-            if (formulae.get(index) == Parenthesis.Close)
-                return formulae.subList(1, index - 1);
+
+    public static CtlFormulae extractNextSubFormulae(CtlFormulae ctlFormulae, int firstParenthesisIndex) {
+
+        int subListLength = 0;
+        int parenthesisCount = 0;
+
+        for (int i = firstParenthesisIndex; i < ctlFormulae.getNbOperands() - 1; i++) {
+            if (ctlFormulae.getOperand(i) == Parenthesis.Open)
+                parenthesisCount++;
+            else if (ctlFormulae.getOperand(i) == Parenthesis.Close)
+                parenthesisCount--;
+
+            if (parenthesisCount == 0) {
+                break;
+            } else {
+                subListLength++;
+            }
         }
-        return formulae;
+
+        // +1 To remove the first parenthesis
+        return new CtlFormulae(ctlFormulae.getOperands().subList(firstParenthesisIndex + 1, firstParenthesisIndex + subListLength));
     }
 
     public static List<Operand> minusFirstIndex(List<Operand> formulae) {

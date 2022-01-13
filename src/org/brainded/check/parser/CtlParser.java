@@ -1,11 +1,8 @@
 package org.brainded.check.parser;
 
-import jdk.jshell.spi.ExecutionControl;
-import org.brainded.check.model.ctl.Atom;
-import org.brainded.check.model.ctl.Operand;
-import org.brainded.check.model.ctl.Operator;
-import org.brainded.check.model.ctl.Parenthesis;
+import org.brainded.check.model.ctl.*;
 import org.brainded.check.model.exceptions.CtlException;
+import org.brainded.check.utils.CtlUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,37 +10,45 @@ import java.util.Objects;
 
 public class CtlParser {
 
-    public static List<Operand> parse(String ctlFormulaeString) throws ExecutionControl.NotImplementedException {
+    private CtlFormulae ctlFormulae = new CtlFormulae();
+    private int parenthesisCount = 0;
 
-        List<Operand> ctlFormulae = new ArrayList<>();
+    public CtlFormulae parse(String ctlFormulaeString) {
+
         char[] ctlFormulaeCharArray = ctlFormulaeString.toCharArray();
 
         for (char character : ctlFormulaeCharArray)
-            parseAndVerify(ctlFormulae, character);
+            this.verifyAndAddToCtlFormulae(this.parseCharToOperand(character));
 
-        verifyParenthesis(ctlFormulae);
+        this.verifyParenthesis();
+
+        this.ctlFormulae = this.translate(this.ctlFormulae);
+
 
         return ctlFormulae;
     }
 
-    private static void parseAndVerify(List<Operand> ctlFormulae, char character) throws ExecutionControl.NotImplementedException {
-        int ctlFormulaeSize = ctlFormulae.size();
-        Operand lastOperator;
-        Operand operand = parseCharToOperand(character);
+    // region Utils
 
-        ctlFormulae.add(operand);
+    private void verifyAndAddToCtlFormulae(Operand operand) {
+        int ctlFormulaeSize = this.ctlFormulae.getNbOperands();
+        Operand lastOperator;
+
+        this.ctlFormulae.addOperands(operand);
 
         if (ctlFormulaeSize > 0) {
-            lastOperator = ctlFormulae.get(ctlFormulaeSize - 1);
+            lastOperator = this.ctlFormulae.getOperand(ctlFormulaeSize - 1);
 
             if (operand instanceof Operator)
-                verifyOperator(operand, lastOperator);
-            else if (operand instanceof Atom)
-                verifyAtomicProposition(lastOperator);
+                this.verifyOperator(operand, lastOperator);
+            else if (operand instanceof Parenthesis)
+                this.countParenthesis(operand);
+            else
+                this.verifyAtomicProposition(lastOperator);
         }
     }
 
-    private static Operand parseCharToOperand(char character) {
+    private Operand parseCharToOperand(char character) {
         return Objects.requireNonNullElseGet(
                 Operator.valueOfOperator(character),
                 () -> Objects.requireNonNullElseGet(
@@ -53,76 +58,257 @@ public class CtlParser {
         );
     }
 
-    private static void verifyExistOperator(Operand lastOperator) {
-        if (lastOperator != Operator.Or &&
+    //endregion
+
+    // region Translators
+
+    private CtlFormulae translate(CtlFormulae ctlFormulae) {
+        CtlFormulae translated = null;
+
+        for (int i = 0; i < ctlFormulae.getNbOperands() - 1; i++) {
+
+            Operand operand = ctlFormulae.getOperand(i);
+            Operand nextOperand = ctlFormulae.getOperand(i + 1);
+
+            if (operand instanceof Operator) {
+                switch ((Operator) operand) {
+                    case All -> {
+
+                        // AX
+                        if (nextOperand == Operator.Next)
+                            translated = this.translateAX(ctlFormulae, i);
+
+                        // AG
+                        if (nextOperand == Operator.Globally)
+                            translated = this.translateAG(ctlFormulae, i);
+
+                        // AF
+                        if (nextOperand == Operator.Finally)
+                            translated = this.translateAF(ctlFormulae, i);
+                    }
+                    case Exist -> {
+                        // EF
+                        if (nextOperand == Operator.Finally)
+                            translated = this.translateEF(ctlFormulae, i);
+                    }
+                    case Next -> {
+                    }
+                    case True -> {
+                    }
+                    case Finally -> {
+                    }
+                    case Globally -> {
+                    }
+                    case Until -> {
+                    }
+                }
+
+                if (translated != null)
+                    i = i + translated.getNbOperands() - 1;
+            }
+        }
+
+        return translated;
+    }
+
+    private CtlFormulae translateAX(CtlFormulae ctlFormulae, int i) {
+        CtlFormulae translated = new CtlFormulae();
+        Operand operandPlus2 = ctlFormulae.getOperand(i + 2);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Not);
+        translated.addOperands(Operator.Exist);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.True);
+        translated.addOperands(Operator.Until);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Not);
+
+        if (operandPlus2 == Parenthesis.Open)
+            translated.addOperands(
+                    translate(CtlUtils.extractNextSubFormulae(ctlFormulae, i + 2))
+            );
+        else if (operandPlus2 instanceof Atom)
+            translated.addOperands(operandPlus2);
+        else
+            throw new CtlException("translate", "AX error");
+
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        return translated;
+    }
+
+    private CtlFormulae translateAG(CtlFormulae ctlFormulae, int i) {
+        CtlFormulae translated = new CtlFormulae();
+        Operand operandPlus2 = ctlFormulae.getOperand(i + 2);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Not);
+        translated.addOperands(Operator.Exist);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.True);
+        translated.addOperands(Operator.Until);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Not);
+        translated.addOperands(Parenthesis.Open);
+
+        if (operandPlus2 == Parenthesis.Open)
+            translated.addOperands(
+                    translate(CtlUtils.extractNextSubFormulae(ctlFormulae, i + 2))
+            );
+        else if (operandPlus2 instanceof Atom)
+            translated.addOperands(operandPlus2);
+        else
+            throw new CtlException("translate", "AX error");
+
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        return translated;
+    }
+
+    private CtlFormulae translateAF(CtlFormulae ctlFormulae, int i) {
+        CtlFormulae translated = new CtlFormulae();
+        Operand operandPlus2 = ctlFormulae.getOperand(i + 2);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Not);
+        translated.addOperands(Operator.Exist);
+        translated.addOperands(Operator.Globally);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Not);
+
+        if (operandPlus2 == Parenthesis.Open)
+            translated.addOperands(
+                    translate(CtlUtils.extractNextSubFormulae(ctlFormulae, i + 2))
+            );
+        else if (operandPlus2 instanceof Atom)
+            translated.addOperands(operandPlus2);
+        else
+            throw new CtlException("translate", "AF error");
+
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        return translated;
+    }
+
+    private CtlFormulae translateEF(CtlFormulae ctlFormulae, int i) {
+        CtlFormulae translated = new CtlFormulae();
+        Operand operandPlus2 = ctlFormulae.getOperand(i + 2);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.Exist);
+        translated.addOperands(Parenthesis.Open);
+        translated.addOperands(Operator.True);
+        translated.addOperands(Operator.Until);
+
+        if (operandPlus2 == Parenthesis.Open)
+            translated.addOperands(
+                    translate(CtlUtils.extractNextSubFormulae(ctlFormulae, i + 2))
+            );
+        else if (operandPlus2 instanceof Atom)
+            translated.addOperands(operandPlus2);
+        else
+            throw new CtlException("translate", "EF error");
+
+        translated.addOperands(Parenthesis.Close);
+        translated.addOperands(Parenthesis.Close);
+        return translated;
+    }
+
+    // endregion
+
+
+    // region Verifiers
+
+    private void verifyAtomicProposition(Operand lastOperator) {
+        if (lastOperator == Parenthesis.Close ||
+                lastOperator == Operator.True ||
+                lastOperator instanceof Atom)
+            throw new CtlException("verifyAtomicProposition");
+    }
+
+    private void verifyExistOperator(Operand lastOperator) {
+        if (lastOperator != Parenthesis.Open &&
+                lastOperator != Operator.Or &&
+                lastOperator != Operator.And &&
+                lastOperator != Operator.Imply)
+            throw new CtlException("verifyExistOperator");
+    }
+
+    private void verifyAllOperator(Operand lastOperator) {
+        if (lastOperator != Parenthesis.Open &&
+                lastOperator != Operator.Or &&
                 lastOperator != Operator.And &&
                 lastOperator != Operator.Imply)
             throw new CtlException("verifyAllOperator");
     }
 
-    private static void verifyAllOperator(Operand lastOperator) {
-        if (lastOperator != Operator.Or &&
-                lastOperator != Operator.And &&
-                lastOperator != Operator.Imply)
-            throw new CtlException("verifyAllOperator");
+    private void verifyAndOrImplyOperator(Operand lastOperator) {
+        if (!(lastOperator instanceof Atom || lastOperator == Parenthesis.Close))
+            throw new CtlException("verifyAndOrImplyOperator");
     }
 
-    private static void verifyNextOperator(Operand lastOperator) {
-        if (lastOperator != Operator.Or &&
-                lastOperator != Operator.And &&
-                lastOperator != Operator.Imply &&
-                lastOperator != Operator.Exist &&
-                lastOperator != Operator.All)
+    private void verifyNotOperator(Operand lastOperator) {
+        System.out.println("Wola je sais pas");
+    }
+
+    private void verifyTrueOperator(Operand lastOperator) {
+        if (lastOperator instanceof Atom
+                || lastOperator == Parenthesis.Close)
+            throw new CtlException("verifyTrueOperator");
+    }
+
+    private void verifyNextOperator(Operand lastOperator) {
+        if (lastOperator instanceof Atom
+                || lastOperator == Parenthesis.Close
+                || lastOperator == Operator.Next
+                || lastOperator == Operator.Finally
+                || lastOperator == Operator.Globally)
             throw new CtlException("verifyNextOperator");
     }
 
-
-
-    private static void verifyAndOperator(Operand lastOperator) {
-        if (lastOperator != Operator.Or &&
-                lastOperator != Operator.And &&
-                lastOperator != Operator.Imply)
-            throw new CtlException("verifyAllOperator");
+    private void verifyFinallyOperator(Operand lastOperator) {
+        if (lastOperator instanceof Atom
+                || lastOperator == Parenthesis.Close
+                || lastOperator == Operator.Next
+                || lastOperator == Operator.Until
+                || lastOperator == Operator.Globally)
+            throw new CtlException("verifyFinallyOperator");
     }
 
-    private static void verifyOrOperator(Operand lastOperator) throws ExecutionControl.NotImplementedException {
-        throw new ExecutionControl.NotImplementedException("verifyOrOperator");
+    private void verifyGloballyOperator(Operand lastOperator) {
+        if (lastOperator instanceof Atom
+                || lastOperator == Parenthesis.Close
+                || lastOperator == Operator.Next
+                || lastOperator == Operator.Until
+                || lastOperator == Operator.Finally)
+            throw new CtlException("verifyGloballyOperator");
     }
 
-    private static void verifyNotOperator(Operand lastOperator) throws ExecutionControl.NotImplementedException {
-        throw new ExecutionControl.NotImplementedException("verifyNotOperator");
+    private void verifyUntilOperator(Operand lastOperator) {
+        if (lastOperator == Operator.Next
+                || lastOperator == Operator.Globally
+                || lastOperator == Operator.Finally)
+            throw new CtlException("verifyUntilOperator");
     }
 
-    private static void verifyImplyOperator(Operand lastOperator) throws ExecutionControl.NotImplementedException {
-        throw new ExecutionControl.NotImplementedException("verifyImplyOperator");
+    private void verifyParenthesis() {
+        if (this.parenthesisCount != 0)
+            throw new CtlException("verifyParenthesis");
     }
 
-    private static void verifyTrueOperator(Operand lastOperator) throws ExecutionControl.NotImplementedException {
-        throw new ExecutionControl.NotImplementedException("verifyTrueOperator");
+    private void countParenthesis(Operand operand) {
+        if (operand == Parenthesis.Open)
+            this.parenthesisCount++;
+        else if (operand == Parenthesis.Close)
+            this.parenthesisCount--;
+        else
+            throw new CtlException("verifyParenthesis", "Invalid parenthesis");
     }
 
-    private static void verifyFinallyOperator(Operand lastOperator) throws ExecutionControl.NotImplementedException {
-        throw new ExecutionControl.NotImplementedException("verifyFinallyOperator");
-    }
-
-    private static void verifyGloballyOperator(Operand lastOperator) throws ExecutionControl.NotImplementedException {
-        throw new ExecutionControl.NotImplementedException("verifyGloballyOperator");
-    }
-
-    private static void verifyUntilOperator(Operand lastOperator) throws ExecutionControl.NotImplementedException {
-        throw new ExecutionControl.NotImplementedException("verifyUntilOperator");
-    }
-
-    private static void verifyWeakOperator(Operand lastOperator) throws ExecutionControl.NotImplementedException {
-        throw new ExecutionControl.NotImplementedException("verifyWeakOperator");
-    }
-
-    private static void verifyOperator(Operand operand, Operand lastOperator) throws ExecutionControl.NotImplementedException {
+    private void verifyOperator(Operand operand, Operand lastOperator) {
         switch ((Operator) operand) {
-            case And -> verifyAndOperator(lastOperator);
-            case Or -> verifyOrOperator(lastOperator);
+            case And, Or, Imply -> verifyAndOrImplyOperator(lastOperator);
             case Not -> verifyNotOperator(lastOperator);
-            case Imply -> verifyImplyOperator(lastOperator);
             case All -> verifyAllOperator(lastOperator);
             case Exist -> verifyExistOperator(lastOperator);
             case Next -> verifyNextOperator(lastOperator);
@@ -130,32 +316,12 @@ public class CtlParser {
             case Finally -> verifyFinallyOperator(lastOperator);
             case Globally -> verifyGloballyOperator(lastOperator);
             case Until -> verifyUntilOperator(lastOperator);
-            case Weak -> verifyWeakOperator(lastOperator);
             default -> throw new CtlException("verifyOperator", "Invalid operator");
         }
     }
 
-    private static void verifyParenthesis(List<Operand> ctlFormulae) {
-        int parenthesisCount = 0;
+    // endregion
 
-        for (Operand op : ctlFormulae) {
-            if (op instanceof Parenthesis) {
-                if (op == Parenthesis.Open)
-                    parenthesisCount++;
-                else if (op == Parenthesis.Close)
-                    parenthesisCount--;
-                else
-                    throw new CtlException("verifyParenthesis", "Invalid parenthesis");
-            }
-        }
-        if (parenthesisCount != 0)
-            throw new CtlException("verifyParenthesis");
-    }
-
-    private static void verifyAtomicProposition(Operand lastOperator) {
-        if (lastOperator instanceof Atom || lastOperator == Operator.And || lastOperator == Operator.Or)
-            throw new CtlException("verifyAtomicProposition");
-    }
 
 }
 
