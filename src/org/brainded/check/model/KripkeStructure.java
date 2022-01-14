@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class KripkeStructure {
 
@@ -102,5 +103,9 @@ public class KripkeStructure {
     @Override
     public String toString() {
         return states.stream().map(Object::toString).reduce((s, s2) -> s + "\n" + s2).orElse("No States");
+    }
+
+    public Set<State> getInitialStates() {
+        return this.getStates().stream().filter(State::isInitialState).collect(Collectors.toSet());
     }
 }
