@@ -139,7 +139,7 @@ public class HieroglyphsChecker {
             form5.addOperands(form4);*/
 
             Checker checker = new Checker(ks, ctlFormulae.getOperands());
-      //      System.out.println(ctlFormulae);
+            System.out.println(ctlFormulae);
             if (checker.satisfyFormulae()) {
                 for (State state : checker.getValidatingStates()) {
                     System.out.println(state.minimalPrint());

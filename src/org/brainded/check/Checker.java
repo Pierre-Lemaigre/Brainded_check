@@ -4,6 +4,7 @@ import org.brainded.check.model.ctl.CtlFormulae;
 import org.brainded.check.model.KripkeStructure;
 import org.brainded.check.model.State;
 import org.brainded.check.model.ctl.*;
+import org.brainded.check.model.exceptions.CtlException;
 import org.brainded.check.utils.CtlUtils;
 
 import java.util.*;
@@ -43,11 +44,6 @@ public class Checker {
         }
         return marked;
     }
-
-    private Set<State> markingTrue() {
-        return new HashSet<>(this.kripkeStructure.getStates());
-    }
-
 
     private Set<State> NOT(List<Operand> formulae) {
         Set<State> marked = marking(formulae);
@@ -212,7 +208,7 @@ public class Checker {
                 return this.NOT(CtlUtils.minusFirstIndex(formulae));
             }
             if (formulae.get(1) instanceof CtlFormulae operand) {
-                return marking(operand.getOperands());
+                return this.NOT(operand.getOperands());
             }
         }
         throw new RuntimeException("CTL Syntax error");
@@ -223,7 +219,8 @@ public class Checker {
             if (formulae.size() > 2) {
                 switch ((Operator) formulae.get(2)) {
                     case Until -> {
-                        return this.EU(CtlUtils.uniqueAtIndex(formulae, 1), CtlUtils.minusXIndex(formulae, 3));
+                        return this.EU(CtlUtils.uniqueAtIndex(formulae, 1),
+                                CtlUtils.minusXIndex(formulae, 3));
                     }
                     case Next -> {
                         return this.EX(formulae);
@@ -231,11 +228,23 @@ public class Checker {
                     default -> throw new RuntimeException("Exist operator cannot be follow by anything but U and X");
                 }
             }
-            if (formulae.get(1) instanceof CtlFormulae operand) {
-                return marking(operand.getOperands());
+            if (formulae.get(1) instanceof CtlFormulae subCtl) {
+                List<Operand> subCtlOperands = subCtl.getOperands();
+                if (subCtlOperands.size() > 1 && subCtlOperands.get(1) instanceof Operator operator) {
+                    switch (operator) {
+                        case Next -> {
+                            return this.EX(subCtlOperands);
+                        }
+                        case Until -> {
+                            return this.EU(CtlUtils.uniqueAtIndex(subCtlOperands, 0),
+                                    CtlUtils.minusXIndex(subCtlOperands, 2));
+                        }
+                        default -> throw new RuntimeException("Operand E must be folowed by U and X");
+                    }
+                }
             }
         }
-        throw new RuntimeException("CTL Syntax error");
+        throw new RuntimeException("Operand E must be followed by U and X");
     }
 
     private Set<State> computeAllOperator(List<Operand> formulae) {
@@ -246,14 +255,14 @@ public class Checker {
             } else if (formulae.get(1) instanceof CtlFormulae subCtl) {
                 List<Operand> sub_formulae = subCtl.getOperands();
                 if (sub_formulae.size() > 1 && sub_formulae.get(1) == Operator.Until) {
-                    return this.AU(CtlUtils.uniqueAtIndex(sub_formulae, 1),
-                            CtlUtils.minusXIndex(sub_formulae, 3));
+                    return this.AU(CtlUtils.uniqueAtIndex(sub_formulae, 0),
+                            CtlUtils.minusXIndex(sub_formulae, 2));
                 }
             } else {
                 throw new RuntimeException("Operand A must be followed by U");
             }
         }
-        throw new RuntimeException("CTL syntax error");
+        throw new RuntimeException("Operand A must be followed by U");
     }
 
     private Set<State> computeTrueOperator(List<Operand> formulae) {
