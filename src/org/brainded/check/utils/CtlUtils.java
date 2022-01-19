@@ -13,21 +13,24 @@ public class CtlUtils {
         int subListLength = 0;
         int parenthesisCount = 0;
 
-        for (int i = firstParenthesisIndex; i < ctlFormulae.getNbOperands() - 1; i++) {
+        for (int i = firstParenthesisIndex; i < ctlFormulae.getNbOperands(); i++) {
             if (ctlFormulae.getOperand(i) == Parenthesis.Open)
                 parenthesisCount++;
             else if (ctlFormulae.getOperand(i) == Parenthesis.Close)
                 parenthesisCount--;
 
-            if (parenthesisCount == 0) {
-                break;
-            } else {
+            if (parenthesisCount != 0) {
                 subListLength++;
             }
         }
 
         // +1 To remove the first parenthesis
-        return new CtlFormulae(ctlFormulae.getOperands().subList(firstParenthesisIndex + 1, firstParenthesisIndex + subListLength));
+        return subListLength > 0 ?
+                new CtlFormulae(
+                        ctlFormulae
+                                .getOperands()
+                                .subList(firstParenthesisIndex + 1, firstParenthesisIndex + subListLength))
+                : ctlFormulae;
     }
 
     public static List<Operand> minusFirstIndex(List<Operand> formulae) {

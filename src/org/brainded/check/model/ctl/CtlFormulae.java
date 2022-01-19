@@ -43,13 +43,13 @@ public class CtlFormulae implements Operand {
     @Override
     public String toString() {
         StringBuilder stringRepresentation = new StringBuilder();
-        for (Operand op : this.operands)
-            if (op instanceof CtlFormulae)
-                stringRepresentation.append(Parenthesis.Open.value).append(op.toString()).append(Parenthesis.Close.value);
-            else if (op instanceof Operator)
-                stringRepresentation.append(((Operator) op).value);
+        for (Operand operand : this.operands)
+            if (operand instanceof CtlFormulae)
+                stringRepresentation.append(Parenthesis.Open.value).append(operand.toString()).append(Parenthesis.Close.value);
+            else if (operand instanceof Operator operator)
+                stringRepresentation.append(operator.value);
             else
-                stringRepresentation.append(op.toString());
+                stringRepresentation.append(operand.toString());
 
         return stringRepresentation.toString();
     }
