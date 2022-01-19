@@ -1,23 +1,23 @@
 package org.brainded.check;
 
-import jdk.jshell.spi.ExecutionControl;
 import org.brainded.check.model.KripkeStructure;
 import org.brainded.check.model.State;
-import org.brainded.check.model.ctl.Atom;
 import org.brainded.check.model.ctl.CtlFormulae;
-import org.brainded.check.model.ctl.Operand;
-import org.brainded.check.model.ctl.Operator;
 import org.brainded.check.model.exceptions.CtlException;
 import org.brainded.check.parser.CtlParser;
 import org.brainded.check.model.exceptions.KripkeException;
 import org.brainded.check.parser.KripkeParser;
+import org.brainded.check.services.Checker;
+import org.brainded.check.services.KripkeGenerator;
 
+import javax.management.InstanceNotFoundException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Locale;
-import java.util.List;
+import java.util.Set;
 
 public class HieroglyphsChecker {
 
@@ -27,6 +27,7 @@ public class HieroglyphsChecker {
         LOAD_KRIPKE,
         ENTER_CTL,
         QUIT,
+        RANDOM_KRIPKE,
         DEFAULT
     }
 
@@ -44,6 +45,7 @@ public class HieroglyphsChecker {
         switch (displayMenu()) {
             case LOAD_KRIPKE -> loadKripke();
             case ENTER_CTL -> enterCtl();
+            case RANDOM_KRIPKE -> randomKripke();
             case QUIT -> quit();
         }
     }
@@ -55,7 +57,8 @@ public class HieroglyphsChecker {
             System.out.println("\n-- Hieroglyphs checker menu -- \n");
             System.out.println("1. Load Kripke structure file");
             System.out.println("2. Enter CTL state formulae");
-            System.out.println("3. Quit");
+            System.out.println("3. Generate a Random Kripke Structure");
+            System.out.println("4. Quit");
             System.out.print("Enter your choice : ");
             actionAsked = getActionAsked(actionAsked);
             System.out.println("------------------------------");
@@ -72,7 +75,8 @@ public class HieroglyphsChecker {
             switch (answer) {
                 case 1 -> actionAsked = Action.LOAD_KRIPKE;
                 case 2 -> actionAsked = Action.ENTER_CTL;
-                case 3 -> actionAsked = Action.QUIT;
+                case 3 -> actionAsked = Action.RANDOM_KRIPKE;
+                case 4 -> actionAsked = Action.QUIT;
                 default -> printError("Invalid choice");
             }
         }
@@ -113,33 +117,9 @@ public class HieroglyphsChecker {
         try {
             CtlParser ctlParser = new CtlParser();
             ctlFormulae = ctlParser.parse(readStringInput());
-            /**CtlFormulae form1 = new CtlFormulae();
-            form1.addOperands(new Atom('m'));
-            form1.addOperands(Operator.And);
-            form1.addOperands(new Atom('n'));
-
-            CtlFormulae form2 = new CtlFormulae();
-            form2.addOperands(Operator.Exist);
-            form2.addOperands(Operator.True);
-            form2.addOperands(Operator.Until);
-            form2.addOperands(form1);
-
-            CtlFormulae form3 = new CtlFormulae();
-            form3.addOperands(Operator.Not);
-            form3.addOperands(form2);
-
-            CtlFormulae form4 = new CtlFormulae();
-            form4.addOperands(Operator.Exist);
-            form4.addOperands(Operator.True);
-            form4.addOperands(Operator.Until);
-            form4.addOperands(form3);
-
-            CtlFormulae form5 = new CtlFormulae();
-            form5.addOperands(Operator.Not);
-            form5.addOperands(form4);*/
-
             Checker checker = new Checker(ks, ctlFormulae.getOperands());
             System.out.println(ctlFormulae);
+
             if (checker.satisfyFormulae()) {
                 for (State state : checker.getValidatingStates()) {
                     System.out.println(state.minimalPrint());
@@ -150,6 +130,19 @@ public class HieroglyphsChecker {
         }
 
 
+        act();
+    }
+
+    private static void randomKripke() {
+        System.out.println("\n-- Enter a number of state --\n");
+        int ksStatesNumber = readIntInput();
+        Set<Character> set = new HashSet<>(Arrays.asList('p', 'q', 'r', 's', 'v', 'w'));
+        KripkeGenerator kripkeGenerator = new KripkeGenerator(ksStatesNumber, set);
+        try {
+            kripkeGenerator.generateKripkeStructure();
+        } catch (InstanceNotFoundException e) {
+            e.printStackTrace();
+        }
         act();
     }
 

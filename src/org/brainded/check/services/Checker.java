@@ -1,10 +1,9 @@
-package org.brainded.check;
+package org.brainded.check.services;
 
 import org.brainded.check.model.ctl.CtlFormulae;
 import org.brainded.check.model.KripkeStructure;
 import org.brainded.check.model.State;
 import org.brainded.check.model.ctl.*;
-import org.brainded.check.model.exceptions.CtlException;
 import org.brainded.check.utils.CtlUtils;
 
 import java.util.*;
@@ -37,35 +36,47 @@ public class Checker {
     }
 
     private Set<State> marking(Atom proposition) {
-        Set<State> marked = new HashSet<>();
+        Set<State> mark = new HashSet<>();
         for (State state : this.kripkeStructure.getStates()) {
             if (this.verify(state, proposition))
-                marked.add(state);
+                mark.add(state);
         }
-        return marked;
+        return mark;
     }
 
     private Set<State> NOT(List<Operand> formulae) {
-        Set<State> marked = marking(formulae);
-        Set<State> to_mark = new HashSet<>();
+        Set<State> atomic_mark = marking(formulae);
+        Set<State> mark = new HashSet<>();
         for (State current : this.kripkeStructure.getStates()) {
-            if (!marked.contains(current)) {
-                to_mark.add(current);
+            if (!atomic_mark.contains(current)) {
+                mark.add(current);
             }
         }
-        return to_mark;
+        return mark;
     }
 
     private Set<State> AND(List<Operand> formulae_1, List<Operand> formulae_2) {
         Set<State> sfp1 = marking(formulae_1);
         Set<State> sfp2 = marking(formulae_2);
-        Set<State> to_mark = new HashSet<>();
+        Set<State> mark = new HashSet<>();
         for (State current : this.kripkeStructure.getStates()) {
             if (sfp1.contains(current) && sfp2.contains(current)) {
-                to_mark.add(current);
+                mark.add(current);
             }
         }
-        return to_mark;
+        return mark;
+    }
+
+    private Set<State> OR(List<Operand> formulae_1, List<Operand> formulae_2) {
+        Set<State> sfp1 = marking(formulae_1);
+        Set<State> sfp2 = marking(formulae_2);
+        Set<State> mark = new HashSet<>();
+        for (State current : this.kripkeStructure.getStates()) {
+            if (sfp1.contains(current) || sfp2.contains(current)) {
+                mark.add(current);
+            }
+        }
+        return mark;
     }
 
     private Set<State> EX(List<Operand> formulae) {
@@ -165,18 +176,6 @@ public class Checker {
         return new HashSet<>();
     }
 
-    private Set<State> computeAtom(List<Operand> formulae, Atom operand) {
-        if (formulae.size() > 1) {
-            if (formulae.get(1) instanceof Operator operator && operator == Operator.And) {
-                return this.AND(CtlUtils.uniqueAtIndex(formulae, 0), CtlUtils.minusXIndex(formulae, 2));
-            }
-            Set<State> states = marking(operand);
-            states.addAll(marking(CtlUtils.minusFirstIndex(formulae)));
-            return states;
-        }
-        return marking(operand);
-    }
-
     private Set<State> computeSubFormulae(List<Operand> formulae, CtlFormulae operand) {
         Set<State> states = marking(operand.getOperands());
         if (formulae.size() > 1) states.addAll(marking(CtlUtils.minusFirstIndex(formulae)));
@@ -214,16 +213,32 @@ public class Checker {
         throw new RuntimeException("CTL Syntax error");
     }
 
+    private Set<State> computeAllOperator(List<Operand> formulae) {
+        if (formulae.size() >= 2) {
+            if (formulae.size() > 2 && formulae.get(1) == Operator.Until) {
+                return this.AU(CtlUtils.uniqueAtIndex(formulae, 1),
+                        CtlUtils.minusXIndex(formulae, 3));
+            } else if (formulae.get(1) instanceof CtlFormulae subCtl) {
+                List<Operand> sub_formulae = subCtl.getOperands();
+                if (sub_formulae.size() > 1 && sub_formulae.get(1) == Operator.Until) {
+                    return this.AU(CtlUtils.uniqueAtIndex(sub_formulae, 0),
+                            CtlUtils.minusXIndex(sub_formulae, 2));
+                }
+            }
+        }
+        throw new RuntimeException("Operand A must be followed by U");
+    }
+
     private Set<State> computeExistOperator(List<Operand> formulae) {
         if (formulae.size() >= 2) {
-            if (formulae.size() > 2) {
-                switch ((Operator) formulae.get(2)) {
+            if (formulae.size() > 2 && formulae.get(1) instanceof Operator operand) {
+                switch (operand) {
                     case Until -> {
                         return this.EU(CtlUtils.uniqueAtIndex(formulae, 1),
                                 CtlUtils.minusXIndex(formulae, 3));
                     }
                     case Next -> {
-                        return this.EX(formulae);
+                        return this.EX(CtlUtils.minusXIndex(formulae, 3));
                     }
                     default -> throw new RuntimeException("Exist operator cannot be follow by anything but U and X");
                 }
@@ -233,36 +248,18 @@ public class Checker {
                 if (subCtlOperands.size() > 1 && subCtlOperands.get(1) instanceof Operator operator) {
                     switch (operator) {
                         case Next -> {
-                            return this.EX(subCtlOperands);
+                            return this.EX(CtlUtils.minusXIndex(subCtlOperands, 2));
                         }
                         case Until -> {
                             return this.EU(CtlUtils.uniqueAtIndex(subCtlOperands, 0),
                                     CtlUtils.minusXIndex(subCtlOperands, 2));
                         }
-                        default -> throw new RuntimeException("Operand E must be folowed by U and X");
+                        default -> throw new RuntimeException("Operand E must be folowed by U or X");
                     }
                 }
             }
         }
-        throw new RuntimeException("Operand E must be followed by U and X");
-    }
-
-    private Set<State> computeAllOperator(List<Operand> formulae) {
-        if (formulae.size() >= 2) {
-            if (formulae.size() > 2 && formulae.get(2) == Operator.Until) {
-                return this.AU(CtlUtils.uniqueAtIndex(formulae, 1),
-                        CtlUtils.minusXIndex(formulae, 3));
-            } else if (formulae.get(1) instanceof CtlFormulae subCtl) {
-                List<Operand> sub_formulae = subCtl.getOperands();
-                if (sub_formulae.size() > 1 && sub_formulae.get(1) == Operator.Until) {
-                    return this.AU(CtlUtils.uniqueAtIndex(sub_formulae, 0),
-                            CtlUtils.minusXIndex(sub_formulae, 2));
-                }
-            } else {
-                throw new RuntimeException("Operand A must be followed by U");
-            }
-        }
-        throw new RuntimeException("Operand A must be followed by U");
+        throw new RuntimeException("Operand E must be followed by U or X");
     }
 
     private Set<State> computeTrueOperator(List<Operand> formulae) {
@@ -270,5 +267,24 @@ public class Checker {
         if (formulae.size() > 1)
             states.addAll(marking(CtlUtils.minusFirstIndex(formulae)));
         return states;
+    }
+
+    private Set<State> computeAtom(List<Operand> formulae, Atom operand) {
+        if (formulae.size() > 1) {
+            if (formulae.get(1) instanceof Operator operator) {
+                switch (operator) {
+                    case And -> {
+                        return this.AND(CtlUtils.uniqueAtIndex(formulae, 0), CtlUtils.minusXIndex(formulae, 2));
+                    }
+                    case Or -> {
+                        return this.OR(CtlUtils.uniqueAtIndex(formulae, 0), CtlUtils.minusXIndex(formulae, 2));
+                    }
+                }
+            }
+            Set<State> states = marking(operand);
+            states.addAll(marking(CtlUtils.minusFirstIndex(formulae)));
+            return states;
+        }
+        return marking(operand);
     }
 }
