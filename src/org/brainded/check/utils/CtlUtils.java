@@ -2,6 +2,7 @@ package org.brainded.check.utils;
 
 import org.brainded.check.model.ctl.CtlFormulae;
 import org.brainded.check.model.ctl.Operand;
+import org.brainded.check.model.ctl.Operator;
 import org.brainded.check.model.ctl.Parenthesis;
 
 import java.util.List;
@@ -13,11 +14,13 @@ public class CtlUtils {
         int subListLength = 0;
         int parenthesisCount = 0;
 
-        for (int i = firstParenthesisIndex; i < ctlFormulae.getNbOperands(); i++) {
+        for (int i = firstParenthesisIndex; i < ctlFormulae.getNbOperandsRecursive(); i++) {
             if (ctlFormulae.getOperand(i) == Parenthesis.Open)
                 parenthesisCount++;
             else if (ctlFormulae.getOperand(i) == Parenthesis.Close)
                 parenthesisCount--;
+            else if (ctlFormulae.getOperand(i) instanceof Operator operator && operator == Operator.Imply)
+                break;
 
             if (parenthesisCount != 0) {
                 subListLength++;
@@ -49,7 +52,7 @@ public class CtlUtils {
 
     public static List<Operand> uniqueAtIndex(List<Operand> formulae, int index) {
         if (formulae.size() >= index) {
-            return formulae.subList(index, index+1);
+            return formulae.subList(index, index + 1);
         }
         return formulae;
     }

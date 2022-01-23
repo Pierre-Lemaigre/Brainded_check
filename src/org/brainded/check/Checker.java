@@ -239,12 +239,12 @@ public class Checker {
                             return this.EU(CtlUtils.uniqueAtIndex(subCtlOperands, 0),
                                     CtlUtils.minusXIndex(subCtlOperands, 2));
                         }
-                        default -> throw new RuntimeException("Operand E must be folowed by U and X");
+                        default -> throw new RuntimeException("Operand E must be folowed by U or X");
                     }
                 }
             }
         }
-        throw new RuntimeException("Operand E must be followed by U and X");
+        throw new RuntimeException("Operand E must be followed by U or X");
     }
 
     private Set<State> computeAllOperator(List<Operand> formulae) {

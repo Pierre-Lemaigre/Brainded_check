@@ -1,12 +1,8 @@
 package org.brainded.check;
 
-import jdk.jshell.spi.ExecutionControl;
 import org.brainded.check.model.KripkeStructure;
 import org.brainded.check.model.State;
-import org.brainded.check.model.ctl.Atom;
 import org.brainded.check.model.ctl.CtlFormulae;
-import org.brainded.check.model.ctl.Operand;
-import org.brainded.check.model.ctl.Operator;
 import org.brainded.check.model.exceptions.CtlException;
 import org.brainded.check.parser.CtlParser;
 import org.brainded.check.model.exceptions.KripkeException;
@@ -15,9 +11,7 @@ import org.brainded.check.parser.KripkeParser;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Locale;
-import java.util.List;
 
 public class HieroglyphsChecker {
 
@@ -113,30 +107,30 @@ public class HieroglyphsChecker {
         try {
             CtlParser ctlParser = new CtlParser();
             ctlFormulae = ctlParser.parse(readStringInput());
-            /**CtlFormulae form1 = new CtlFormulae();
-            form1.addOperands(new Atom('m'));
-            form1.addOperands(Operator.And);
-            form1.addOperands(new Atom('n'));
+            /*CtlFormulae form1 = new CtlFormulae();
+             form1.addOperands(new Atom('m'));
+             form1.addOperands(Operator.And);
+             form1.addOperands(new Atom('n'));
 
-            CtlFormulae form2 = new CtlFormulae();
-            form2.addOperands(Operator.Exist);
-            form2.addOperands(Operator.True);
-            form2.addOperands(Operator.Until);
-            form2.addOperands(form1);
+             CtlFormulae form2 = new CtlFormulae();
+             form2.addOperands(Operator.Exist);
+             form2.addOperands(Operator.True);
+             form2.addOperands(Operator.Until);
+             form2.addOperands(form1);
 
-            CtlFormulae form3 = new CtlFormulae();
-            form3.addOperands(Operator.Not);
-            form3.addOperands(form2);
+             CtlFormulae form3 = new CtlFormulae();
+             form3.addOperands(Operator.Not);
+             form3.addOperands(form2);
 
-            CtlFormulae form4 = new CtlFormulae();
-            form4.addOperands(Operator.Exist);
-            form4.addOperands(Operator.True);
-            form4.addOperands(Operator.Until);
-            form4.addOperands(form3);
+             CtlFormulae form4 = new CtlFormulae();
+             form4.addOperands(Operator.Exist);
+             form4.addOperands(Operator.True);
+             form4.addOperands(Operator.Until);
+             form4.addOperands(form3);
 
-            CtlFormulae form5 = new CtlFormulae();
-            form5.addOperands(Operator.Not);
-            form5.addOperands(form4);*/
+             CtlFormulae form5 = new CtlFormulae();
+             form5.addOperands(Operator.Not);
+             form5.addOperands(form4);*/
 
             Checker checker = new Checker(ks, ctlFormulae.getOperands());
             System.out.println(ctlFormulae);

@@ -19,17 +19,21 @@ public class CtlFormulae implements Operand {
         return this.operands;
     }
 
-    public int getNbOperands() {
+    public int getNbOperandsRecursive() {
         int size = 0;
 
-        for (Operand operand: this.operands) {
-            if(operand instanceof CtlFormulae)
-                size+= ((CtlFormulae) operand).getNbOperands();
+        for (Operand operand : this.operands) {
+            if (operand instanceof CtlFormulae)
+                size += ((CtlFormulae) operand).getNbOperandsRecursive();
             else
                 size++;
         }
 
         return size;
+    }
+
+    public int getNbOperands() {
+        return this.operands.size();
     }
 
     public Operand getOperand(int index) {
@@ -45,7 +49,7 @@ public class CtlFormulae implements Operand {
         StringBuilder stringRepresentation = new StringBuilder();
         for (Operand operand : this.operands)
             if (operand instanceof CtlFormulae)
-                stringRepresentation.append(Parenthesis.Open.value).append(operand.toString()).append(Parenthesis.Close.value);
+                stringRepresentation.append(Parenthesis.Open.value).append(operand).append(Parenthesis.Close.value);
             else if (operand instanceof Operator operator)
                 stringRepresentation.append(operator.value);
             else
