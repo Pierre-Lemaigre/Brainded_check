@@ -19,15 +19,21 @@ public class KripkeGenerator {
         this.statesNumber = statesNumber;
         this.labels = labels;
         random = new Random();
-        labelsRandom = random.ints(statesNumber, 0, labels.size()).boxed().toList();
-        initialStates = random.ints(statesNumber, 0, statesNumber/2).distinct().boxed().toList();
+        labelsRandom = random.ints(0, labels.size())
+                .limit(statesNumber)
+                .boxed().toList();
+        initialStates = random.ints(0, statesNumber)
+                .distinct()
+                .limit(random.nextInt(0,statesNumber)/2)
+                .boxed().toList();
         successorsRandom = random.ints(statesNumber, 1, statesNumber).boxed().toList();
     }
 
-    public void generateKripkeStructure() throws InstanceNotFoundException {
+    public KripkeStructure generateKripkeStructure() throws InstanceNotFoundException {
         KripkeStructure ks = randomKs();
         System.out.println(ks);
         saveAsJson(ks);
+        return ks;
     }
 
     private KripkeStructure randomKs() throws InstanceNotFoundException {
