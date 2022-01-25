@@ -12,19 +12,22 @@ public class CtlUtils {
     public static CtlFormulae extractNextSubFormulae(CtlFormulae ctlFormulae, int firstParenthesisIndex) {
 
         int subListLength = 0;
+        int parenthesisVerifier = 0;
         int parenthesisCount = 0;
 
         for (int i = firstParenthesisIndex; i < ctlFormulae.getNbOperandsRecursive(); i++) {
-            if (ctlFormulae.getOperand(i) == Parenthesis.Open)
+            if (ctlFormulae.getOperand(i) == Parenthesis.Open) {
+                parenthesisVerifier++;
                 parenthesisCount++;
-            else if (ctlFormulae.getOperand(i) == Parenthesis.Close)
-                parenthesisCount--;
-            else if (ctlFormulae.getOperand(i) instanceof Operator operator && operator == Operator.Imply)
-                break;
-
-            if (parenthesisCount != 0) {
-                subListLength++;
+            } else if (ctlFormulae.getOperand(i) == Parenthesis.Close) {
+                parenthesisVerifier--;
+                parenthesisCount++;
             }
+
+            if (parenthesisVerifier != 0) {
+                subListLength++;
+            } else
+                break;
         }
 
         // +1 To remove the first parenthesis
@@ -32,7 +35,7 @@ public class CtlUtils {
                 new CtlFormulae(
                         ctlFormulae
                                 .getOperands()
-                                .subList(firstParenthesisIndex + 1, firstParenthesisIndex + subListLength))
+                                .subList(firstParenthesisIndex + 1, firstParenthesisIndex + subListLength), parenthesisCount)
                 : ctlFormulae;
     }
 

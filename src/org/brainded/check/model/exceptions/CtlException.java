@@ -2,12 +2,12 @@ package org.brainded.check.model.exceptions;
 
 public class CtlException extends RuntimeException {
 
-    public CtlException(String methodName){
-        super(methodName + " : Invdalid CTL syntax");
+    public CtlException(){
+        super("Invalid CTL formulae");
     }
 
-    public CtlException(String methodName, String msg) {
-        super(methodName + " : "+ msg);
+    public CtlException(String msg) {
+        super(msg);
     }
     
 }

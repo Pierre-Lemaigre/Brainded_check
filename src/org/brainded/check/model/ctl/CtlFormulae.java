@@ -5,10 +5,17 @@ import java.util.List;
 
 public class CtlFormulae implements Operand {
 
+    private int nbParenthesis;
+
     private final List<Operand> operands;
 
     public CtlFormulae() {
         this.operands = new ArrayList<>();
+    }
+
+    public CtlFormulae(List<Operand> operands, int nbParenthesis) {
+        this.operands = operands;
+        this.nbParenthesis = nbParenthesis;
     }
 
     public CtlFormulae(List<Operand> operands) {
@@ -42,6 +49,10 @@ public class CtlFormulae implements Operand {
 
     public void addOperands(Operand operand) {
         this.operands.add(operand);
+    }
+
+    public int getNbParenthesis() {
+        return this.nbParenthesis;
     }
 
     @Override
