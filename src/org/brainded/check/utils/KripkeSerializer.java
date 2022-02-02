@@ -23,6 +23,24 @@ public class KripkeSerializer {
         filename += ".json";
     }
 
+    public void saveKsInFile() throws IOException {
+        final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        JsonObject jsonKripkeStructure = new JsonObject();
+
+        JsonArray states = statesAsJsonArray(this.kripkeStructure.getStates(), gson);
+        JsonArray initial_states = statesAsJsonArray(this.kripkeStructure.getInitialStates(), gson);
+        JsonArray labels = labelsAsJsonArray(this.kripkeStructure.getStates(), gson);
+        JsonArray successors = successorsAsJsonArray(this.kripkeStructure.getStates(), gson);
+
+        jsonKripkeStructure.add("states", states);
+        jsonKripkeStructure.add("initial_states", initial_states);
+        jsonKripkeStructure.add("transitions", successors);
+        jsonKripkeStructure.add("labeling", labels);
+        FileWriter fl = DirectoryManager.createFileInRD(filename);
+        gson.toJson(jsonKripkeStructure, fl);
+        fl.flush();
+    }
+
     private String setFilename() throws IOException {
         Path workingPath = DirectoryManager.createResourceDirectory();
         if (Files.isReadable(workingPath) && Files.isWritable(workingPath)) {
@@ -44,23 +62,6 @@ public class KripkeSerializer {
         return setFilename() + "_alea";
     }
 
-    public void saveKsInFile() throws IOException {
-        final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        JsonObject jsonKripkeStructure = new JsonObject();
-
-        JsonArray states = statesAsJsonArray(this.kripkeStructure.getStates(), gson);
-        JsonArray initial_states = statesAsJsonArray(this.kripkeStructure.getInitialStates(), gson);
-        JsonArray labels = labelsAsJsonArray(this.kripkeStructure.getStates(), gson);
-        JsonArray successors = successorsAsJsonArray(this.kripkeStructure.getStates(), gson);
-
-        jsonKripkeStructure.add("states", states);
-        jsonKripkeStructure.add("initial_states", initial_states);
-        jsonKripkeStructure.add("transitions", successors);
-        jsonKripkeStructure.add("labeling", labels);
-        FileWriter fl = DirectoryManager.createFileInRD(filename);
-        gson.toJson(jsonKripkeStructure, fl);
-        fl.flush();
-    }
 
     private JsonArray statesAsJsonArray(Collection<State> states, Gson gson) {
         List<String> statesNames = states.stream().map(State::getStateName).toList();
@@ -93,9 +94,5 @@ public class KripkeSerializer {
             jsonArray.add(stateSuccessorsAsJson(current, gson));
         }
         return jsonArray;
-    }
-
-    public KripkeStructure loadKsFromFile(Path path) {
-        return kripkeStructure;
     }
 }

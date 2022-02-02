@@ -202,64 +202,67 @@ public class Checker {
     }
 
     private Set<State> computeNotOperator(List<Operand> formulae) {
-        if (formulae.size() >= 2) {
-            if (formulae.size() > 2) {
-                return this.NOT(CtlUtils.minusFirstIndex(formulae));
-            }
-            if (formulae.get(1) instanceof CtlFormulae operand) {
-                return this.NOT(operand.getOperands());
-            }
+        if (formulae.size() < 2) {
+            throw new RuntimeException("CTL Syntax error");
+        } else if (formulae.size() > 2) {
+            return this.NOT(CtlUtils.minusFirstIndex(formulae));
+        } else if (formulae.get(1) instanceof CtlFormulae operand) {
+            return this.NOT(operand.getOperands());
         }
         throw new RuntimeException("CTL Syntax error");
     }
 
     private Set<State> computeAllOperator(List<Operand> formulae) {
-        if (formulae.size() >= 2) {
-            if (formulae.size() > 2 && formulae.get(1) == Operator.Until) {
-                return this.AU(CtlUtils.uniqueAtIndex(formulae, 1),
-                        CtlUtils.minusXIndex(formulae, 3));
-            } else if (formulae.get(1) instanceof CtlFormulae subCtl) {
-                List<Operand> sub_formulae = subCtl.getOperands();
-                if (sub_formulae.size() > 1 && sub_formulae.get(1) == Operator.Until) {
-                    return this.AU(CtlUtils.uniqueAtIndex(sub_formulae, 0),
-                            CtlUtils.minusXIndex(sub_formulae, 2));
-                }
+        if (formulae.size() < 2) {
+            throw new RuntimeException("Operand A must be followed by U");
+        }
+        if (formulae.size() > 2 && formulae.get(1) == Operator.Until) {
+            return this.AU(CtlUtils.uniqueAtIndex(formulae, 1),
+                    CtlUtils.minusXIndex(formulae, 3));
+        } else if (formulae.get(1) instanceof CtlFormulae subCtl) {
+            List<Operand> sub_formulae = subCtl.getOperands();
+            if (sub_formulae.size() > 1 && sub_formulae.get(1) == Operator.Until) {
+                return this.AU(CtlUtils.uniqueAtIndex(sub_formulae, 0),
+                        CtlUtils.minusXIndex(sub_formulae, 2));
             }
         }
         throw new RuntimeException("Operand A must be followed by U");
     }
 
     private Set<State> computeExistOperator(List<Operand> formulae) {
-        if (formulae.size() >= 2) {
-            if (formulae.size() > 2 && formulae.get(1) instanceof Operator operand) {
-                switch (operand) {
-                    case Until -> {
-                        return this.EU(CtlUtils.uniqueAtIndex(formulae, 1),
-                                CtlUtils.minusXIndex(formulae, 3));
-                    }
-                    case Next -> {
-                        return this.EX(CtlUtils.minusXIndex(formulae, 3));
-                    }
-                    default -> throw new RuntimeException("Exist operator cannot be follow by anything but U and X");
-                }
-            }
+        if (formulae.size() < 2) {
+            throw new RuntimeException("Operand E must be followed by U or X");
+        }
+        if (formulae.size() == 2) {
             if (formulae.get(1) instanceof CtlFormulae subCtl) {
                 List<Operand> subCtlOperands = subCtl.getOperands();
                 if (subCtlOperands.size() > 1 && subCtlOperands.get(1) instanceof Operator operator) {
-                    switch (operator) {
-                        case Next -> {
-                            return this.EX(CtlUtils.minusXIndex(subCtlOperands, 2));
-                        }
-                        case Until -> {
-                            return this.EU(CtlUtils.uniqueAtIndex(subCtlOperands, 0),
-                                    CtlUtils.minusXIndex(subCtlOperands, 2));
-                        }
-                        default -> throw new RuntimeException("Operand E must be folowed by U or X");
-                    }
+                    return operandAfterE(subCtlOperands, operator, true);
                 }
+            }
+        } else {
+            if (formulae.get(2) instanceof Operator operand) {
+                return operandAfterE(formulae, operand, false);
+            }
+            if (formulae.get(1) instanceof Operator operand) {
+                return operandAfterE(formulae, operand, false);
             }
         }
         throw new RuntimeException("Operand E must be followed by U or X");
+    }
+
+    private Set<State> operandAfterE(List<Operand> formulae, Operator operand, boolean subCtl) {
+        int offsetFormulae = subCtl ? 1 : 0;
+        switch (operand) {
+            case Next -> {
+                return this.EX(CtlUtils.minusXIndex(formulae, 2 - offsetFormulae));
+            }
+            case Until -> {
+                return this.EU(CtlUtils.uniqueAtIndex(formulae, 1 - offsetFormulae),
+                        CtlUtils.minusXIndex(formulae, 3 - offsetFormulae));
+            }
+            default -> throw new RuntimeException("Exist operator cannot be follow by anything but U and X");
+        }
     }
 
     private Set<State> computeTrueOperator(List<Operand> formulae) {
@@ -270,21 +273,21 @@ public class Checker {
     }
 
     private Set<State> computeAtom(List<Operand> formulae, Atom operand) {
-        if (formulae.size() > 1) {
-            if (formulae.get(1) instanceof Operator operator) {
-                switch (operator) {
-                    case And -> {
-                        return this.AND(CtlUtils.uniqueAtIndex(formulae, 0), CtlUtils.minusXIndex(formulae, 2));
-                    }
-                    case Or -> {
-                        return this.OR(CtlUtils.uniqueAtIndex(formulae, 0), CtlUtils.minusXIndex(formulae, 2));
-                    }
+        if (formulae.size() <= 1) {
+            return marking(operand);
+        }
+        if (formulae.get(1) instanceof Operator operator) {
+            switch (operator) {
+                case And -> {
+                    return this.AND(CtlUtils.uniqueAtIndex(formulae, 0), CtlUtils.minusXIndex(formulae, 2));
+                }
+                case Or -> {
+                    return this.OR(CtlUtils.uniqueAtIndex(formulae, 0), CtlUtils.minusXIndex(formulae, 2));
                 }
             }
-            Set<State> states = marking(operand);
-            states.addAll(marking(CtlUtils.minusFirstIndex(formulae)));
-            return states;
         }
-        return marking(operand);
+        Set<State> states = marking(operand);
+        states.addAll(marking(CtlUtils.minusFirstIndex(formulae)));
+        return states;
     }
 }
