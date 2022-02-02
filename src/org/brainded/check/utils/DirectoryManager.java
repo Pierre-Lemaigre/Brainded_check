@@ -1,5 +1,7 @@
 package org.brainded.check.utils;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,5 +26,11 @@ public class DirectoryManager {
                     .map(name -> name.split("\\.")[0])
                     .collect(Collectors.toList());
         }
+    }
+
+    public static FileWriter createFileInRD(String fileName) throws IOException {
+        File file = new File("./resource/" + fileName);
+        Files.createFile(file.toPath());
+        return new FileWriter(file);
     }
 }

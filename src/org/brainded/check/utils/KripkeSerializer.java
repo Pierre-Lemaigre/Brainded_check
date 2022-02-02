@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import org.brainded.check.model.KripkeStructure;
 import org.brainded.check.model.State;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,23 +16,10 @@ import java.util.*;
 public class KripkeSerializer {
     private final KripkeStructure kripkeStructure;
     private String filename;
-    private final boolean ks_randomized;
-    private final Gson gson;
 
-    public KripkeSerializer(KripkeStructure kripkeStructure) {
+    public KripkeSerializer(KripkeStructure kripkeStructure, boolean ks_alea_gen) throws IOException {
         this.kripkeStructure = kripkeStructure;
-        this.ks_randomized = false;
-        this.gson = new GsonBuilder().setPrettyPrinting().create();
-    }
-
-    public KripkeSerializer(KripkeStructure kripkeStructure, boolean ks_alea_gen) {
-        this.kripkeStructure = kripkeStructure;
-        this.ks_randomized = ks_alea_gen;
-        this.gson = new GsonBuilder().setPrettyPrinting().create();
-    }
-
-    private void setFilenameSaving() throws IOException {
-        filename =  ks_randomized ? setFilenameRandom() : setFilename();
+        filename =  ks_alea_gen ? setFilenameRandom() : setFilename();
         filename += ".json";
     }
 
@@ -56,20 +44,56 @@ public class KripkeSerializer {
         return setFilename() + "_alea";
     }
 
-    public void saveKsInFile() {
+    public void saveKsInFile() throws IOException {
+        final Gson gson = new GsonBuilder().setPrettyPrinting().create();
         JsonObject jsonKripkeStructure = new JsonObject();
 
-        JsonArray states = statesAsJsonArray(this.kripkeStructure.getStates());
-        JsonArray initial_states = statesAsJsonArray(this.kripkeStructure.getInitialStates());
+        JsonArray states = statesAsJsonArray(this.kripkeStructure.getStates(), gson);
+        JsonArray initial_states = statesAsJsonArray(this.kripkeStructure.getInitialStates(), gson);
+        JsonArray labels = labelsAsJsonArray(this.kripkeStructure.getStates(), gson);
+        JsonArray successors = successorsAsJsonArray(this.kripkeStructure.getStates(), gson);
 
+        jsonKripkeStructure.add("states", states);
+        jsonKripkeStructure.add("initial_states", initial_states);
+        jsonKripkeStructure.add("transitions", successors);
+        jsonKripkeStructure.add("labeling", labels);
+        FileWriter fl = DirectoryManager.createFileInRD(filename);
+        gson.toJson(jsonKripkeStructure, fl);
+        fl.flush();
     }
 
-    private JsonArray statesAsJsonArray(Collection<State> states) {
+    private JsonArray statesAsJsonArray(Collection<State> states, Gson gson) {
         List<String> statesNames = states.stream().map(State::getStateName).toList();
-        return this.gson.toJsonTree(statesNames).getAsJsonArray();
+        return gson.toJsonTree(statesNames).getAsJsonArray();
     }
 
-    //private JsonObject stateLabelsAsJson()
+    private JsonObject stateLabelsAsJson(State state, Gson gson) {
+        JsonObject res = new JsonObject();
+        res.add(state.getStateName(), gson.toJsonTree(state.getLabels()).getAsJsonArray());
+        return res;
+    }
+
+    private JsonArray labelsAsJsonArray(Collection<State> states, Gson gson) {
+        JsonArray jsonArray = new JsonArray();
+        for (State current: states) {
+            jsonArray.add(stateLabelsAsJson(current, gson));
+        }
+        return jsonArray;
+    }
+
+    private JsonObject stateSuccessorsAsJson(State state, Gson gson) {
+        JsonObject res = new JsonObject();
+        res.add(state.getStateName(), statesAsJsonArray(state.getSuccessors(), gson));
+        return res;
+    }
+
+    private JsonArray successorsAsJsonArray(Collection<State> states, Gson gson) {
+        JsonArray jsonArray = new JsonArray();
+        for (State current: states) {
+            jsonArray.add(stateSuccessorsAsJson(current, gson));
+        }
+        return jsonArray;
+    }
 
     public KripkeStructure loadKsFromFile(Path path) {
         return kripkeStructure;

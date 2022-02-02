@@ -9,6 +9,7 @@ import org.brainded.check.model.exceptions.KripkeException;
 import org.brainded.check.parser.KripkeParser;
 import org.brainded.check.services.Checker;
 import org.brainded.check.services.KripkeGenerator;
+import org.brainded.check.utils.KripkeSerializer;
 
 import javax.management.InstanceNotFoundException;
 import java.io.BufferedReader;
@@ -88,14 +89,7 @@ public class HieroglyphsChecker {
     //region Actions
     private static void loadKripke() {
         System.out.println("\n-- Load Kripke structure file -- \n");
-        if (ks != null) {
-            System.out.println("Kripke structure already loaded!");
-            System.out.println("Are you sure to overload Kripke Structure ? (y/N)");
-            String overload = readStringInput();
-            if (overload.toLowerCase(Locale.ROOT).equals("n") || overload.toLowerCase(Locale.ROOT).equals("no")) {
-                act();
-            }
-        }
+        overloadingKripke();
 
         System.out.print("Enter the path to the Kripke structure file : ");
         String kripkeFilePath = readStringInput();
@@ -134,14 +128,19 @@ public class HieroglyphsChecker {
     }
 
     private static void randomKripke() {
+        overloadingKripke();
         System.out.println("\n-- Enter a number of state --\n");
         int ksStatesNumber = readIntInput();
         Set<Character> set = new HashSet<>(Arrays.asList('p', 'q', 'r', 's', 'v', 'w'));
         KripkeGenerator kripkeGenerator = new KripkeGenerator(ksStatesNumber, set);
         try {
-            kripkeGenerator.generateKripkeStructure();
+            ks = kripkeGenerator.generateKripkeStructure();
+            KripkeSerializer serializer = new KripkeSerializer(ks, true);
+            serializer.saveKsInFile();
         } catch (InstanceNotFoundException e) {
             e.printStackTrace();
+        } catch (IOException e) {
+            printError("Error saving random Kripke Structure");
         }
         act();
     }
@@ -165,7 +164,7 @@ public class HieroglyphsChecker {
         Integer intInput = null;
         try {
             intInput = Integer.parseInt(keyboard.readLine());
-        } catch (NumberFormatException | IOException e) {
+        } catch (NumberFormatException | IOException | NullPointerException e) {
             printError("Please enter en number");
         }
         return intInput;
@@ -190,6 +189,17 @@ public class HieroglyphsChecker {
     }
 
     //endregion
+
+    private static void overloadingKripke() {
+        if (ks != null) {
+            System.out.println("Kripke structure already loaded!");
+            System.out.println("Are you sure to overload Kripke Structure ? (y/N)");
+            String overload = readStringInput();
+            if (!(overload.toLowerCase(Locale.ROOT).equals("y") || overload.toLowerCase(Locale.ROOT).equals("yes"))) {
+                act();
+            }
+        }
+    }
 
     //endregion
 
