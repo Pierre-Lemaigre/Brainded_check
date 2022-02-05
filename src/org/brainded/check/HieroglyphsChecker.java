@@ -94,6 +94,10 @@ public class HieroglyphsChecker {
         int kripkeFilePath = readIntInput();
         try {
             Path filename = DirectoryManager.getFileFromNumber(kripkeFilePath);
+            if (filename.getFileName().toString().equals("empty")) {
+                System.out.println("Invalid File chosen");
+                act();
+            }
             ks = KripkeParser.parse(filename);
             ks.validateKripkeStruct();
             System.out.println("Loaded this Kripke Structure :\n" + ks);

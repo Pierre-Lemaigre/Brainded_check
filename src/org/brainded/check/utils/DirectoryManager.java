@@ -52,6 +52,6 @@ public class DirectoryManager {
         return Path.of(resource + listFilenames()
                 .stream()
                 .filter(f -> f.contains(subStr))
-                .findFirst().orElseThrow());
+                .findFirst().orElse("empty"));
     }
 }
