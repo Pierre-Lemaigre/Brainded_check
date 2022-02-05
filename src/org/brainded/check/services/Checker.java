@@ -10,7 +10,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Checker {
-
     private final KripkeStructure kripkeStructure;
     private final List<Operand> ctrlFormulae;
     private final Set<State> validatingStates;
@@ -21,8 +20,21 @@ public class Checker {
         this.validatingStates = new HashSet<>();
     }
 
-    public Set<State> getValidatingStates() {
-        return this.validatingStates;
+    public List<String> getValidatingStates() {
+        return this.validatingStates
+                .stream()
+                .map(State::getStateName)
+                .sorted()
+                .toList();
+    }
+
+    public List<String> getInitialStates() {
+        return this.kripkeStructure
+                .getInitialStates()
+                .stream()
+                .map(State::getStateName)
+                .sorted()
+                .toList();
     }
 
     public boolean satisfyFormulae() {
@@ -216,7 +228,7 @@ public class Checker {
         if (formulae.size() < 2) {
             throw new RuntimeException("Operand A must be followed by U");
         }
-        if (formulae.size() > 2 && formulae.get(1) == Operator.Until) {
+        if (formulae.size() > 2 && formulae.get(2) == Operator.Until) {
             return this.AU(CtlUtils.uniqueAtIndex(formulae, 1),
                     CtlUtils.minusXIndex(formulae, 3));
         } else if (formulae.get(1) instanceof CtlFormulae subCtl) {

@@ -9,24 +9,21 @@ import javax.management.InstanceNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class KripkeParser {
 
-    public static KripkeStructure parse(String kripkeFilePath) throws ClassCastException {
+    public static KripkeStructure parse(Path kripkeFilePath) throws ClassCastException {
 
         KripkeStructure ks = new KripkeStructure();
 
         try {
             Gson gson = new Gson();
 
-            // TODO Remove
-            kripkeFilePath = "./resource/kripke_1.json";
-
-            Reader reader = Files.newBufferedReader(Paths.get(kripkeFilePath));
+            Reader reader = Files.newBufferedReader(kripkeFilePath);
 
             Map<String, List<?>> map = gson.fromJson(reader, Map.class);
 

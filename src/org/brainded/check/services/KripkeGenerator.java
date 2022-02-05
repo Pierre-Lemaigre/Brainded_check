@@ -22,7 +22,7 @@ public class KripkeGenerator {
         labelsRandom = random.ints(0, labels.size())
                 .limit(statesNumber)
                 .boxed().toList();
-        initialStates = random.ints(0, statesNumber)
+        initialStates = random.ints(1, statesNumber)
                 .distinct()
                 .limit(random.nextInt(0,statesNumber)/2)
                 .boxed().toList();

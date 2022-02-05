@@ -44,7 +44,7 @@ public class KripkeSerializer {
     private String setFilename() throws IOException {
         Path workingPath = DirectoryManager.createResourceDirectory();
         if (Files.isReadable(workingPath) && Files.isWritable(workingPath)) {
-            List<String> filesInDirectory = DirectoryManager.getFilesNameInDirectory(workingPath);
+            List<String> filesInDirectory = DirectoryManager.getFilesInDirNoExt();
             if (filesInDirectory.size() == 0) {
                 return "kripke_1";
             }

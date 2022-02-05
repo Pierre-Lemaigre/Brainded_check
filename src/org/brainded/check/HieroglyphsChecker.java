@@ -1,24 +1,22 @@
 package org.brainded.check;
 
 import org.brainded.check.model.KripkeStructure;
-import org.brainded.check.model.State;
 import org.brainded.check.model.ctl.CtlFormulae;
 import org.brainded.check.model.exceptions.CtlException;
-import org.brainded.check.parser.CtlParser;
 import org.brainded.check.model.exceptions.KripkeException;
+import org.brainded.check.parser.CtlParser;
 import org.brainded.check.parser.KripkeParser;
 import org.brainded.check.services.Checker;
 import org.brainded.check.services.KripkeGenerator;
+import org.brainded.check.utils.DirectoryManager;
 import org.brainded.check.utils.KripkeSerializer;
 
 import javax.management.InstanceNotFoundException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
+import java.nio.file.Path;
+import java.util.*;
 
 public class HieroglyphsChecker {
 
@@ -90,14 +88,16 @@ public class HieroglyphsChecker {
     private static void loadKripke() {
         System.out.println("\n-- Load Kripke structure file -- \n");
         overloadingKripke();
+        displayFile();
 
-        System.out.print("Enter the path to the Kripke structure file : ");
-        String kripkeFilePath = readStringInput();
-        ks = KripkeParser.parse(kripkeFilePath);
+        System.out.print("Enter the number of the Kripke structure file : ");
+        int kripkeFilePath = readIntInput();
         try {
+            Path filename = DirectoryManager.getFileFromNumber(kripkeFilePath);
+            ks = KripkeParser.parse(filename);
             ks.validateKripkeStruct();
             System.out.println("Loaded this Kripke Structure :\n" + ks);
-        } catch (KripkeException e) {
+        } catch (KripkeException | IOException e) {
             printError(e.getMessage());
             ks = null;
         }
@@ -114,15 +114,8 @@ public class HieroglyphsChecker {
             Checker checker = new Checker(ks, ctlFormulae.getOperands());
 
             System.out.println("\nFormula to evaluate : " + ctlFormulae + "\n");
-
-            if (checker.satisfyFormulae()) {
-                System.out.println("States satisfying the formula:");
-                for (State state : checker.getValidatingStates()) {
-                    System.out.println(state.minimalPrint());
-                }
-            } else {
-                System.out.println("No state satisfy the formula");
-            }
+            boolean result = checker.satisfyFormulae();
+            printResult(checker, result);
         } catch (CtlException e) {
             printError(e.getMessage());
         }
@@ -155,6 +148,7 @@ public class HieroglyphsChecker {
             e.printStackTrace();
         }
         System.out.println("\nBye !");
+        System.exit(0);
     }
 
     //endregion
@@ -189,6 +183,37 @@ public class HieroglyphsChecker {
 
     private static void printError(String errorMsg) {
         System.out.println("\u001B[31m" + errorMsg + "\u001B[0m");
+    }
+
+    private static void displayFile() {
+        try {
+            DirectoryManager.createResourceDirectory();
+            List<String> filenames = DirectoryManager.listFilenames();
+            System.out.println("--------------------");
+            for (int index = 0; index < filenames.size(); index++)
+                System.out.println((1 + index) + ": " + filenames.get(index));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void printResult(Checker checker, boolean result) {
+        String answer = result ?
+                "The kripke Structure satisfies the formulae!" :
+                "The Kripke Structure doesn't not satisfy the formulae!";
+        System.out.println(answer);
+
+        System.out.print("Initial States : |");
+        for (String st : checker.getInitialStates()) {
+            System.out.print(st + "|");
+        }
+
+        System.out.print("\nValidating States : |");
+        for (String st : checker.getValidatingStates()) {
+            System.out.print(st + "|");
+        }
+
+        System.out.println();
     }
 
     //endregion
