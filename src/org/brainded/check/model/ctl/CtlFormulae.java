@@ -18,10 +18,6 @@ public class CtlFormulae implements Operand {
         this.nbParenthesis = nbParenthesis;
     }
 
-    public CtlFormulae(List<Operand> operands) {
-        this.operands = operands;
-    }
-
     public List<Operand> getOperands() {
         return this.operands;
     }

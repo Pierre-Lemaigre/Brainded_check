@@ -112,17 +112,20 @@ public class HieroglyphsChecker {
             CtlParser ctlParser = new CtlParser();
             ctlFormulae = ctlParser.parse(readStringInput());
             Checker checker = new Checker(ks, ctlFormulae.getOperands());
-            System.out.println(ctlFormulae);
+
+            System.out.println("\nFormula to evaluate : " + ctlFormulae + "\n");
 
             if (checker.satisfyFormulae()) {
+                System.out.println("States satisfying the formula:");
                 for (State state : checker.getValidatingStates()) {
                     System.out.println(state.minimalPrint());
                 }
+            } else {
+                System.out.println("No state satisfy the formula");
             }
         } catch (CtlException e) {
             printError(e.getMessage());
         }
-
 
         act();
     }
