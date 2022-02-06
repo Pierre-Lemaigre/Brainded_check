@@ -298,7 +298,7 @@ public class CtlParser {
     }
 
     private void verifyAndOrImplyUntilOperator(Operand operand, Operand lastOperand) {
-        if(operand == Operator.Until && !(lastOperand instanceof CtlFormulae))
+        if(operand == Operator.Until && lastOperand != Parenthesis.Close)
             throw new CtlException("Invalid use of Until operator");
         if (lastOperand != Parenthesis.Close && !(lastOperand instanceof Atom) && lastOperand != Operator.True)
             throw new CtlException("Invalid use of " + operand + " operator");
