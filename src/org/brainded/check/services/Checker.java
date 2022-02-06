@@ -214,8 +214,8 @@ public class Checker {
     }
 
     private Set<State> computeNotOperator(List<Operand> formulae) {
-        if (formulae.size() == 1 && formulae.get(0) instanceof Atom atom) {
-            return this.NOT(formulae);
+        if (formulae.size() == 2 && formulae.get(1) instanceof Atom atom) {
+            return this.NOT(CtlUtils.minusFirstIndex(formulae));
         } else if (formulae.size() > 2) {
             return this.NOT(CtlUtils.minusFirstIndex(formulae));
         } else if (formulae.get(1) instanceof CtlFormulae operand) {

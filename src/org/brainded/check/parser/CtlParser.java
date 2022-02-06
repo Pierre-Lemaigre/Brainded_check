@@ -293,8 +293,10 @@ public class CtlParser {
     }
 
     private void verifyNotOperator(Operand lastOperand) {
-        if (lastOperand != Operator.And && lastOperand != Operator.Or && lastOperand != Operator.Imply && lastOperand != Operator.Until && lastOperand != Parenthesis.Open)
-            throw new CtlException("Invalid use of Not operator");
+        if (lastOperand != null) {
+            if (lastOperand != Operator.And && lastOperand != Operator.Or && lastOperand != Operator.Imply && lastOperand != Operator.Until && lastOperand != Parenthesis.Open)
+                throw new CtlException("Invalid use of Not operator");
+        }
     }
 
     private void verifyAndOrImplyUntilOperator(Operand operand, Operand lastOperand) {
