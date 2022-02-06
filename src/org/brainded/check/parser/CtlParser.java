@@ -41,20 +41,20 @@ public class CtlParser {
 
     private void verifyAndAddToCtlFormulae(Operand operand) {
         int ctlFormulaeSize = this.ctlFormulae.getNbOperandsRecursive();
-        Operand lastOperator = null;
+        Operand lastOperand = null;
 
         this.ctlFormulae.addOperands(operand);
 
         if (ctlFormulaeSize > 0)
-            lastOperator = this.ctlFormulae.getOperand(ctlFormulaeSize - 1);
+            lastOperand = this.ctlFormulae.getOperand(ctlFormulaeSize - 1);
 
         if (operand instanceof Operator)
-            this.verifyOperandUsage(operand, lastOperator);
+            this.verifyOperandUsage(operand, lastOperand);
         else if (operand instanceof Parenthesis) {
-            this.verifyOperandUsage(operand, lastOperator);
+            this.verifyOperandUsage(operand, lastOperand);
             this.countParenthesis(operand);
         } else
-            this.verifyAtomicProposition(lastOperator);
+            this.verifyAtomicProposition(lastOperand);
     }
 
     private Operand parseCharToOperand(char character) {
@@ -102,13 +102,15 @@ public class CtlParser {
                 // AX
                 if (nextOperand == Operator.Next) return this.translateAX(ctlFormulae, i);
 
-                    // AG
+                // AG
                 else if (nextOperand == Operator.Globally) return this.translateAG(ctlFormulae, i);
 
-                    // AF
+                // AF
                 else if (nextOperand == Operator.Finally) return this.translateAF(ctlFormulae, i);
 
-                else throw new CtlException();
+                // Throw CtlException if anything else than a sub-formula
+                else
+                    if(!(nextOperand instanceof CtlFormulae)) throw new CtlException();
             }
             case Exist -> {
                 // EF
@@ -120,7 +122,9 @@ public class CtlParser {
                 // EX
                 if (nextOperand == Operator.Next) return null;
 
-                else throw new CtlException();
+                // Throw CtlException if anything else than a sub-formula
+                else
+                    if(!(nextOperand instanceof CtlFormulae)) throw new CtlException();
             }
             case Imply -> {
                 // a > b
@@ -151,7 +155,6 @@ public class CtlParser {
             } else if (operand instanceof Atom atom) {
                 translated.addOperands(atom);
             }
-
         }
 
         return translated;
@@ -277,40 +280,42 @@ public class CtlParser {
     // region Verifiers
 
 
-    private void verifyExistAllTrueOperator(Operand operand, Operand lastOperator) {
-        if (lastOperator != null || operand == Operator.True) {
-            if (lastOperator != Operator.Not && lastOperator != Operator.And && lastOperator != Operator.Or && lastOperator != Operator.Imply && lastOperator != Operator.Until && lastOperator != Parenthesis.Open)
+    private void verifyExistAllTrueOperator(Operand operand, Operand lastOperand) {
+        if (lastOperand != null || operand == Operator.True) {
+            if (lastOperand != Operator.Not && lastOperand != Operator.And && lastOperand != Operator.Or && lastOperand != Operator.Imply && lastOperand != Operator.Until && lastOperand != Parenthesis.Open)
                 throw new CtlException("Invalid use of " + operand + " operator");
         }
     }
 
-    private void verifyNextFinallyGloballyOperator(Operand operand, Operand lastOperator) {
-        if (lastOperator != Operator.All && lastOperator != Operator.Exist)
+    private void verifyNextFinallyGloballyOperator(Operand operand, Operand lastOperand) {
+        if (lastOperand != Operator.All && lastOperand != Operator.Exist)
             throw new CtlException("Invalid use of " + operand + " operator");
     }
 
-    private void verifyNotOperator(Operand lastOperator) {
-        if (lastOperator != Operator.And && lastOperator != Operator.Or && lastOperator != Operator.Imply && lastOperator != Operator.Until && lastOperator != Parenthesis.Open)
+    private void verifyNotOperator(Operand lastOperand) {
+        if (lastOperand != Operator.And && lastOperand != Operator.Or && lastOperand != Operator.Imply && lastOperand != Operator.Until && lastOperand != Parenthesis.Open)
             throw new CtlException("Invalid use of Not operator");
     }
 
-    private void verifyAndOrImplyUntilOperator(Operand operand, Operand lastOperator) {
-        if (lastOperator != Parenthesis.Close && !(lastOperator instanceof Atom) && lastOperator != Operator.True)
+    private void verifyAndOrImplyUntilOperator(Operand operand, Operand lastOperand) {
+        if(operand == Operator.Until && !(lastOperand instanceof CtlFormulae))
+            throw new CtlException("Invalid use of Until operator");
+        if (lastOperand != Parenthesis.Close && !(lastOperand instanceof Atom) && lastOperand != Operator.True)
             throw new CtlException("Invalid use of " + operand + " operator");
     }
 
-    private void verifyAtomicProposition(Operand lastOperator) {
-        if (lastOperator != Operator.Not && lastOperator != Operator.And && lastOperator != Operator.Or && lastOperator != Operator.Imply && lastOperator != Operator.Until && lastOperator != Parenthesis.Open)
+    private void verifyAtomicProposition(Operand lastOperand) {
+        if (lastOperand != Operator.Not && lastOperand != Operator.And && lastOperand != Operator.Or && lastOperand != Operator.Imply && lastOperand != Operator.Until && lastOperand != Parenthesis.Open)
             throw new CtlException("Invalid placement of atomic proposition");
     }
 
-    private void verifyCloseParenthesis(Operand lastOperator) {
-        if (lastOperator != Parenthesis.Close && !(lastOperator instanceof Atom) && lastOperator != Operator.True)
+    private void verifyCloseParenthesis(Operand lastOperand) {
+        if (lastOperand != Parenthesis.Close && !(lastOperand instanceof Atom) && lastOperand != Operator.True)
             throw new CtlException("Invalid placement of Close parenthesis");
     }
 
-    private void verifyOpenParenthesis(Operand lastOperator) {
-        if (lastOperator == Parenthesis.Close || lastOperator instanceof Atom || lastOperator == Operator.True)
+    private void verifyOpenParenthesis(Operand lastOperand) {
+        if (lastOperand == Parenthesis.Close || lastOperand instanceof Atom || lastOperand == Operator.True)
             throw new CtlException("Invalid placement of Open parenthesis");
     }
 
@@ -323,19 +328,19 @@ public class CtlParser {
         else if (operand == Parenthesis.Close) this.parenthesisCount--;
     }
 
-    private void verifyOperandUsage(Operand operand, Operand lastOperator) {
+    private void verifyOperandUsage(Operand operand, Operand lastOperand) {
         if (operand instanceof Operator operator) {
             switch (operator) {
-                case And, Or, Imply, Until -> this.verifyAndOrImplyUntilOperator(operand, lastOperator);
-                case Not -> this.verifyNotOperator(lastOperator);
-                case All, Exist, True -> this.verifyExistAllTrueOperator(operand, lastOperator);
-                case Next, Finally, Globally -> this.verifyNextFinallyGloballyOperator(operand, lastOperator);
+                case And, Or, Imply, Until -> this.verifyAndOrImplyUntilOperator(operand, lastOperand);
+                case Not -> this.verifyNotOperator(lastOperand);
+                case All, Exist, True -> this.verifyExistAllTrueOperator(operand, lastOperand);
+                case Next, Finally, Globally -> this.verifyNextFinallyGloballyOperator(operand, lastOperand);
                 default -> throw new CtlException("Invalid operator");
             }
         } else if (operand instanceof Parenthesis parenthesis) {
             switch (parenthesis) {
-                case Close -> this.verifyCloseParenthesis(lastOperator);
-                case Open -> this.verifyOpenParenthesis(lastOperator);
+                case Close -> this.verifyCloseParenthesis(lastOperand);
+                case Open -> this.verifyOpenParenthesis(lastOperand);
                 default -> throw new CtlException("Invalid parenthesis");
             }
         }
