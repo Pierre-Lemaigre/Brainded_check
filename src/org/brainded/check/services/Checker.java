@@ -214,14 +214,14 @@ public class Checker {
     }
 
     private Set<State> computeNotOperator(List<Operand> formulae) {
-        if (formulae.size() < 2) {
-            throw new RuntimeException("CTL Syntax error");
+        if (formulae.size() == 1 && formulae.get(0) instanceof Atom atom) {
+            return this.NOT(formulae);
         } else if (formulae.size() > 2) {
             return this.NOT(CtlUtils.minusFirstIndex(formulae));
         } else if (formulae.get(1) instanceof CtlFormulae operand) {
             return this.NOT(operand.getOperands());
         }
-        throw new RuntimeException("CTL Syntax error");
+        throw new RuntimeException("Operand Not must be followed by something");
     }
 
     private Set<State> computeAllOperator(List<Operand> formulae) {
