@@ -131,7 +131,7 @@ public class HieroglyphsChecker {
         overloadingKripke();
         System.out.println("\n-- Enter a number of state --\n");
         int ksStatesNumber = readIntInput();
-        Set<Character> set = new HashSet<>(Arrays.asList('p', 'q', 'r', 's', 'v', 'w'));
+        Set<Character> set = readLabels();
         KripkeGenerator kripkeGenerator = new KripkeGenerator(ksStatesNumber, set);
         try {
             ks = kripkeGenerator.generateKripkeStructure();
@@ -179,6 +179,19 @@ public class HieroglyphsChecker {
             e.printStackTrace();
         }
         return stringInput;
+    }
+
+    private static Set<Character> readLabels() {
+        System.out.println("Enter the number of label");
+        Integer labelSize = readIntInput();
+        Set<Character> labels = new HashSet<>();
+        while(labelSize > 0) {
+            System.out.print("Enter a marking label : ");
+            Character c = readStringInput().toLowerCase(Locale.ROOT).charAt(0);
+            labels.add(c);
+            labelSize--;
+        }
+        return labels;
     }
 
     //endregion

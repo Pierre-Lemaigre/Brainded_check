@@ -19,7 +19,7 @@ public class KripkeGenerator {
         this.statesNumber = statesNumber;
         this.labels = labels;
         random = new Random();
-        labelsRandom = random.ints(0, labels.size())
+        labelsRandom = random.ints(0, labels.size() + 1)
                 .limit(statesNumber)
                 .boxed().toList();
         initialStates = random.ints(0, statesNumber)
@@ -32,7 +32,6 @@ public class KripkeGenerator {
     public KripkeStructure generateKripkeStructure() throws InstanceNotFoundException {
         KripkeStructure ks = randomKs();
         System.out.println(ks);
-        saveAsJson(ks);
         return ks;
     }
 
@@ -74,9 +73,5 @@ public class KripkeGenerator {
         IntStream randomIndex = random.ints(0, labels.size()).distinct().limit(labelNumber);
         randomIndex.forEach(index -> labelsRandom.add(currentLabel.get(index)));
         return labelsRandom;
-    }
-
-    private void saveAsJson(KripkeStructure ks) {
-
     }
 }
